@@ -1,4 +1,54 @@
 <script lang="ts">
+
+  const keys = [
+    "w", // up
+    "a", // left
+    "s", // down
+    "d", // right
+  ];
+
+  function onkeydown(event: KeyboardEvent) {
+    const key = event.key;
+
+    if (!keys.includes(key)) return;
+
+    event.preventDefault();
+
+    if (key === "w") {
+      //
+    }
+    if (key === "a") {
+      //
+    }
+    if (key === "s") {
+      //
+    }
+    if (key === "d") {
+      //
+    }
+  }
+
+  function onkeyup(event: KeyboardEvent) {
+    const key = event.key;
+
+    if (!keys.includes(key)) return;
+
+    event.preventDefault();
+
+    if (key === "w") {
+      //
+    }
+    if (key === "a") {
+      //
+    }
+    if (key === "s") {
+      //
+    }
+    if (key === "d") {
+      //
+    }
+  }
+
   let start = 0;
   let timestampPrev = 0;
   let timerMinutes = 0;
@@ -29,6 +79,8 @@
     window.requestAnimationFrame(gameLoop);
   }
 </script>
+
+<svelte:window {onkeydown} {onkeyup} />
 
 <div>
   <h1>Svampire Svurvivors</h1>
