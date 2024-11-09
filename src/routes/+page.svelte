@@ -1,6 +1,28 @@
 <script lang="ts">
   import Controls from "./Controls.svelte";
 
+  interface Weapon {
+    name: string;
+    damage: number;
+    spawnInterval: number; // milliseconds
+    spriteFilePath: string;
+  }
+
+  const whip: Weapon = {
+    name: "whip",
+    damage: 2,
+    spawnInterval: 1000,
+    spriteFilePath: "",
+  };
+  const sword: Weapon = {
+    name: "sword",
+    damage: 4,
+    spawnInterval: 500,
+    spriteFilePath: "",
+  };
+
+  const weaponsAll: Weapon[] = [whip, sword];
+
   }
 
   let elGameWindow: HTMLDivElement;
