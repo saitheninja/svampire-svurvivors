@@ -24,6 +24,7 @@
   const weaponsAll: Weapon[] = [whip, sword];
 
   interface Alive {
+    name: string;
     health: number;
     spriteEmoji: string;
     speed: number;
@@ -31,6 +32,7 @@
   }
 
   const player: Alive = {
+    name: "player",
     health: 100,
     spriteEmoji: "🧔🏾",
     speed: 10,
@@ -38,18 +40,21 @@
   };
 
   const enemySkeleton: Alive = {
+    name: "skeleton",
     health: 1,
     spriteEmoji: "💀",
     speed: 2,
     weapons: [],
   };
   const enemyZombie: Alive = {
+    name: "zombie",
     health: 4,
     spriteEmoji: "🧟",
     speed: 5,
     weapons: [],
   };
   const enemyGoblin: Alive = {
+    name: "goblin",
     health: 10,
     spriteEmoji: "👺",
     speed: 1,
@@ -59,11 +64,7 @@
   // Dog
   // Dragonfly
   // Enemy pathfinding? Move towards middle?
-  const enemies = [enemySkeleton, enemyZombie, enemyGoblin];
-
-
-
-
+  const enemiesAll = [enemySkeleton, enemyZombie, enemyGoblin];
   }
 
   let elGameWindow: HTMLDivElement;
@@ -168,7 +169,7 @@
   id="game-window"
   class="grid h-full grid-cols-1 bg-gray-600"
 >
-  <div id="top-ui">
+  <div id="top-ui" class="z-50">
     <time
       id="timer"
       datetime="PT{timerMinutes}M{timerSeconds}S"
@@ -186,7 +187,7 @@
 
   <div id="player" class="z-10 m-auto size-8 bg-red-500">
     <span class="text-xl">{player.spriteEmoji}</span>
-    <span class="sr-only">player</span>
+    <span class="sr-only">{player.name}</span>
 
     {#each player.weapons as weapon}
       <div class="absolute z-20">
@@ -195,4 +196,18 @@
       </div>
     {/each}
   </div>
+
+  {#each enemiesAll as enemy}
+    <div class="z-0 m-auto">
+      <span>{enemy.spriteEmoji}</span>
+      <span class="sr-only">{enemy.name}</span>
+
+      {#each enemy.weapons as weapon}
+        <div class="absolute">
+          <span>{weapon.spriteEmoji}</span>
+          <span class="sr-only">{weapon.name}</span>
+        </div>
+      {/each}
+    </div>
+  {/each}
 </div>
