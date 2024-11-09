@@ -1,53 +1,77 @@
 <script lang="ts">
-  const controlKeys = {
-    up: ["w", "ArrowUp"],
-    left: ["a", "ArrowLeft"],
-    down: ["s", "ArrowDown"],
-    right: ["d", "ArrowRight"],
-  };
+  interface GameAction {
+    action: string;
+    keyBindings: string[];
+  }
+
+  export let controlKeys: GameAction[] = [
+    {
+      action: "up",
+      keyBindings: ["w", "ArrowUp"],
+    },
+    {
+      action: "left",
+      keyBindings: ["a", "ArrowLeft"],
+    },
+    {
+      action: "down",
+      keyBindings: ["s", "ArrowDown"],
+    },
+    {
+      action: "right",
+      keyBindings: ["d", "ArrowRight"],
+    },
+  ];
+
+  export let showBindings = true;
 
   function onkeydown(event: KeyboardEvent) {
     const key = event.key;
     // console.log(key);
 
-    if (controlKeys.up.includes(key)) {
-      console.log("up");
-      event.preventDefault();
-    }
-    if (controlKeys.down.includes(key)) {
-      console.log("down");
-      event.preventDefault();
-    }
-    if (controlKeys.left.includes(key)) {
-      console.log("left");
-      event.preventDefault();
-    }
-    if (controlKeys.right.includes(key)) {
-      console.log("right");
-      event.preventDefault();
+    for (const { action, keyBindings } of controlKeys) {
+      for (const binding of keyBindings) {
+        if (binding === key) {
+          console.log("down", action, binding);
+          event.preventDefault();
+        }
+      }
     }
   }
 
   function onkeyup(event: KeyboardEvent) {
     const key = event.key;
+    // console.log(key);
 
-    // if (!keys.includes(key)) return;
-
-    // event.preventDefault();
-
-    if (controlKeys.up.includes(key)) {
-      //
-    }
-    if (controlKeys.down.includes(key)) {
-      //
-    }
-    if (controlKeys.left.includes(key)) {
-      //
-    }
-    if (controlKeys.right.includes(key)) {
-      //
+    for (const { action, keyBindings } of controlKeys) {
+      for (const binding of keyBindings) {
+        if (binding === key) {
+          console.log("up", action, binding);
+          event.preventDefault();
+        }
+      }
     }
   }
 </script>
 
 <svelte:window {onkeydown} {onkeyup} />
+
+{#if showBindings}
+  <div>
+    <p>Keybindings</p>
+
+    <ul>
+      {#each controlKeys as { action, keyBindings }}
+        <li>
+          {action}:
+
+          <ul>
+            {#each keyBindings as binding}
+              <li>{binding}</li>
+            {/each}
+          </ul>
+        </li>
+      {/each}
+    </ul>
+  </div>
+{/if}
