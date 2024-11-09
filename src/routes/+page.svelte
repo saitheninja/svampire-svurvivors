@@ -7,6 +7,12 @@
   let clientWidth;
   let clientHeight;
 
+  function startGame() {
+    // start game loop
+    window.requestAnimationFrame(gameLoop);
+
+    // fullscreen
+    elGameWindow.requestFullscreen();
   }
 
   // timer
@@ -88,7 +94,7 @@
   </div>
 </div>
 
-<form onsubmit={() => window.requestAnimationFrame(gameLoop)}>
+<form onsubmit={() => startGame()}>
   <button>start game</button>
 </form>
 
