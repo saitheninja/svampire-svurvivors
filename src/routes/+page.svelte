@@ -1,6 +1,44 @@
 <script lang="ts">
   import Controls from "./Controls.svelte";
 
+  interface Alive {
+    health: number;
+    spriteEmoji: string;
+    speed: number;
+    weapons: Weapon[];
+  }
+
+  const player: Alive = {
+    health: 100,
+    spriteEmoji: "🧔🏾",
+    speed: 10,
+    weapons: [],
+  };
+
+  const enemySkeleton: Alive = {
+    health: 1,
+    spriteEmoji: "💀",
+    speed: 2,
+    weapons: [],
+  };
+  const enemyZombie: Alive = {
+    health: 4,
+    spriteEmoji: "🧟",
+    speed: 5,
+    weapons: [],
+  };
+  const enemyGoblin: Alive = {
+    health: 10,
+    spriteEmoji: "👺",
+    speed: 1,
+    weapons: [],
+  };
+  // Witch
+  // Dog
+  // Dragonfly
+  // Enemy pathfinding? Move towards middle?
+  const enemies = [enemySkeleton, enemyZombie, enemyGoblin];
+
   interface Weapon {
     name: string;
     damage: number;
@@ -142,4 +180,8 @@
 
     <span class="text-green-500">{clientWidth} {clientHeight}</span>
   </div>
+
+  <div id="player" class="z-10 m-auto size-8 bg-red-500">
+    <span>{player.spriteEmoji}</span>
+    <span class="sr-only">player</span>
   </div>
