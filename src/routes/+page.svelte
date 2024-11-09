@@ -3,6 +3,10 @@
 
   }
 
+  let elGameWindow: HTMLDivElement;
+  let clientWidth;
+  let clientHeight;
+
   }
 
   // timer
@@ -87,6 +91,14 @@
 <form onsubmit={() => window.requestAnimationFrame(gameLoop)}>
   <button>start game</button>
 </form>
+
+<div
+  bind:this={elGameWindow}
+  bind:clientWidth
+  bind:clientHeight
+  id="game-window"
+  class="grid h-full grid-cols-1"
+>
   <div id="top-ui">
     <time
       id="timer"
@@ -99,5 +111,7 @@
     </time>
 
     <span class="text-blue-500">{fps} fps</span>
+
+    <span class="text-green-500">{clientWidth} {clientHeight}</span>
   </div>
   </div>
