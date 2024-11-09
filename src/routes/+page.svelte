@@ -1,52 +1,8 @@
 <script lang="ts">
+  import Controls from "./Controls.svelte";
 
-  const keys = [
-    "w", // up
-    "a", // left
-    "s", // down
-    "d", // right
-  ];
-
-  function onkeydown(event: KeyboardEvent) {
-    const key = event.key;
-
-    if (!keys.includes(key)) return;
-
-    event.preventDefault();
-
-    if (key === "w") {
-      //
-    }
-    if (key === "a") {
-      //
-    }
-    if (key === "s") {
-      //
-    }
-    if (key === "d") {
-      //
-    }
   }
 
-  function onkeyup(event: KeyboardEvent) {
-    const key = event.key;
-
-    if (!keys.includes(key)) return;
-
-    event.preventDefault();
-
-    if (key === "w") {
-      //
-    }
-    if (key === "a") {
-      //
-    }
-    if (key === "s") {
-      //
-    }
-    if (key === "d") {
-      //
-    }
   }
 
   let start = 0;
@@ -80,7 +36,7 @@
   }
 </script>
 
-<svelte:window {onkeydown} {onkeyup} />
+<Controls />
 
 <div>
   <h1>Svampire Svurvivors</h1>
