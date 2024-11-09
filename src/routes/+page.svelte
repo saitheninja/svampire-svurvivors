@@ -5,17 +5,23 @@
 
   }
 
+  // timer
   let start = 0;
-  let timestampPrev = 0;
   let timerMinutes = 0;
   let timerSeconds = 0;
 
+  // fps
+  let timestampPrev = 0;
+  let fps = 0;
+
   function draw(timestamp: number) {
+    // fps
     let secondsPassed = (timestamp - timestampPrev) / 1000;
     timestampPrev = timestamp;
-    const fps = Math.round(1 / secondsPassed);
-    console.log(fps);
 
+    fps = Math.round(1 / secondsPassed);
+
+    // timer
     if (start === 0) start = timestamp;
 
     const elapsed = timestamp - start;
@@ -24,7 +30,6 @@
     timerMinutes = Math.floor(secondsSinceStart / 60);
     timerSeconds = secondsSinceStart % 60;
 
-    console.log(start, timestamp, elapsed, timerMinutes, timerSeconds);
   }
 
   function gameLoop(timestamp: number) {
@@ -66,3 +71,17 @@
 <form onsubmit={() => window.requestAnimationFrame(gameLoop)}>
   <button>start game</button>
 </form>
+  <div id="top-ui">
+    <time
+      id="timer"
+      datetime="PT{timerMinutes}M{timerSeconds}S"
+      class="flex flex-row text-blue-500"
+    >
+      <span>{timerMinutes.toString().length === 1 ? "0" : ""}{timerMinutes}</span>
+      <span class="mx-0">:</span>
+      <span>{timerSeconds.toString().length === 1 ? "0" : ""}{timerSeconds}</span>
+    </time>
+
+    <span class="text-blue-500">{fps} fps</span>
+  </div>
+  </div>
