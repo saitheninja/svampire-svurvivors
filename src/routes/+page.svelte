@@ -1,6 +1,28 @@
 <script lang="ts">
   import Controls from "./Controls.svelte";
 
+  interface Weapon {
+    name: string;
+    damage: number;
+    spawnInterval: number; // milliseconds
+    spriteEmoji: string;
+  }
+
+  const whip: Weapon = {
+    name: "whip",
+    damage: 2,
+    spawnInterval: 1000,
+    spriteEmoji: "🔗",
+  };
+  const sword: Weapon = {
+    name: "sword",
+    damage: 4,
+    spawnInterval: 500,
+    spriteEmoji: "🗡️",
+  };
+
+  const weaponsAll: Weapon[] = [whip, sword];
+
   interface Alive {
     health: number;
     spriteEmoji: string;
@@ -12,7 +34,7 @@
     health: 100,
     spriteEmoji: "🧔🏾",
     speed: 10,
-    weapons: [],
+    weapons: weaponsAll,
   };
 
   const enemySkeleton: Alive = {
@@ -39,27 +61,8 @@
   // Enemy pathfinding? Move towards middle?
   const enemies = [enemySkeleton, enemyZombie, enemyGoblin];
 
-  interface Weapon {
-    name: string;
-    damage: number;
-    spawnInterval: number; // milliseconds
-    spriteFilePath: string;
-  }
 
-  const whip: Weapon = {
-    name: "whip",
-    damage: 2,
-    spawnInterval: 1000,
-    spriteFilePath: "",
-  };
-  const sword: Weapon = {
-    name: "sword",
-    damage: 4,
-    spawnInterval: 500,
-    spriteFilePath: "",
-  };
 
-  const weaponsAll: Weapon[] = [whip, sword];
 
   }
 
@@ -163,7 +166,7 @@
   bind:clientWidth
   bind:clientHeight
   id="game-window"
-  class="grid h-full grid-cols-1"
+  class="grid h-full grid-cols-1 bg-gray-600"
 >
   <div id="top-ui">
     <time
@@ -182,6 +185,14 @@
   </div>
 
   <div id="player" class="z-10 m-auto size-8 bg-red-500">
-    <span>{player.spriteEmoji}</span>
+    <span class="text-xl">{player.spriteEmoji}</span>
     <span class="sr-only">player</span>
+
+    {#each player.weapons as weapon}
+      <div class="absolute z-20">
+        <span>{weapon.spriteEmoji}</span>
+        <span class="sr-only">{weapon.name}</span>
+      </div>
+    {/each}
   </div>
+</div>
