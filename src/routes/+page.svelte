@@ -1,6 +1,19 @@
 <script lang="ts">
   import Controls from "./Controls.svelte";
 
+  interface Map {
+    name: string;
+    height: number;
+    width: number;
+    imagePath: string;
+  }
+  const mapForest: Map = {
+    name: "forest",
+    height: 8000,
+    width: 8000,
+    imagePath: "./map-forest.svg",
+  };
+
   interface Weapon {
     name: string;
     damage: number;
