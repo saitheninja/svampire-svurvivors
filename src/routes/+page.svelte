@@ -88,6 +88,8 @@
   let timestampPrev = $state(0);
   let fps = $state(0);
 
+  // controls
+  let actionsActive: string[] = $state([]);
 
   function draw(timestamp: number) {
     // fps
@@ -116,7 +118,7 @@
   }
 </script>
 
-<Controls />
+<Controls bind:actionsActive />
 
 <div>
   <h1>Svampire Svurvivors</h1>
@@ -184,6 +186,8 @@
     <span class="text-blue-700">{fps} fps</span>
 
     <span class="text-green-500">{clientWidth} {clientHeight}</span>
+
+    <span>{JSON.stringify(actionsActive)}</span>
   </div>
 
   <div id="player" class="z-10 m-auto size-8 bg-red-500">

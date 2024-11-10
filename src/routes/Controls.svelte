@@ -1,40 +1,42 @@
 <script lang="ts">
   interface GameAction {
-    action: string;
+    actionName: string;
     keyBindings: string[];
   }
 
-  export let controlKeys: GameAction[] = [
+  let { actionsActive = $bindable([]) }: { actionsActive: string[] } = $props();
+
+  const controlKeys: GameAction[] = [
     {
-      action: "up",
+      actionName: "up",
       keyBindings: ["w", "ArrowUp"],
     },
     {
-      action: "left",
+      actionName: "left",
       keyBindings: ["a", "ArrowLeft"],
     },
     {
-      action: "down",
+      actionName: "down",
       keyBindings: ["s", "ArrowDown"],
     },
     {
-      action: "right",
+      actionName: "right",
       keyBindings: ["d", "ArrowRight"],
     },
   ];
-
-  export let showBindings = true;
+  const showBindings = true;
 
   function onkeydown(event: KeyboardEvent) {
     const key = event.key;
     // console.log(key);
 
-    for (const { action, keyBindings } of controlKeys) {
-      for (const binding of keyBindings) {
-        if (binding === key) {
-          console.log("down", action, binding);
-          event.preventDefault();
-        }
+    for (const { actionName, keyBindings } of controlKeys) {
+      if (keyBindings.includes(key)) {
+        console.log("down", actionName, key);
+        event.preventDefault();
+
+        if (actionsActive.includes(actionName)) return;
+        actionsActive.push(actionName);
       }
     }
   }
@@ -43,12 +45,15 @@
     const key = event.key;
     // console.log(key);
 
-    for (const { action, keyBindings } of controlKeys) {
-      for (const binding of keyBindings) {
-        if (binding === key) {
-          console.log("up", action, binding);
-          event.preventDefault();
-        }
+    for (const { actionName, keyBindings } of controlKeys) {
+      if (keyBindings.includes(key)) {
+        console.log("up", actionName, key);
+        event.preventDefault();
+
+        if (!actionsActive.includes(actionName)) return;
+
+        const removed = actionsActive.filter((action) => action !== actionName);
+        actionsActive = removed;
       }
     }
   }
@@ -61,9 +66,9 @@
     <p>Keybindings</p>
 
     <ul>
-      {#each controlKeys as { action, keyBindings }}
+      {#each controlKeys as { actionName, keyBindings }}
         <li>
-          {action}:
+          {actionName}:
 
           <ul>
             {#each keyBindings as binding}
