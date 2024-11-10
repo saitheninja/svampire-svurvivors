@@ -68,8 +68,8 @@
   }
 
   let elGameWindow: HTMLDivElement;
-  let clientWidth;
-  let clientHeight;
+  let clientWidth = $state(0);
+  let clientHeight = $state(0);
 
   function startGame() {
     // start game loop
@@ -80,13 +80,14 @@
   }
 
   // timer
-  let start = 0;
-  let timerMinutes = 0;
-  let timerSeconds = 0;
+  let start = $state(0);
+  let timerMinutes = $state(0);
+  let timerSeconds = $state(0);
 
   // fps
-  let timestampPrev = 0;
-  let fps = 0;
+  let timestampPrev = $state(0);
+  let fps = $state(0);
+
 
   function draw(timestamp: number) {
     // fps
@@ -167,20 +168,20 @@
   bind:clientWidth
   bind:clientHeight
   id="game-window"
-  class="grid h-full grid-cols-1 bg-gray-600"
+  class="grid h-full grid-cols-1"
 >
-  <div id="top-ui" class="z-50">
+  <div id="top-ui" class="z-50 flex flex-row gap-2">
     <time
       id="timer"
       datetime="PT{timerMinutes}M{timerSeconds}S"
-      class="flex flex-row text-blue-500"
+      class="flex flex-row gap-0 text-blue-500"
     >
       <span>{timerMinutes.toString().length === 1 ? "0" : ""}{timerMinutes}</span>
-      <span class="mx-0">:</span>
+      <span>:</span>
       <span>{timerSeconds.toString().length === 1 ? "0" : ""}{timerSeconds}</span>
     </time>
 
-    <span class="text-blue-500">{fps} fps</span>
+    <span class="text-blue-700">{fps} fps</span>
 
     <span class="text-green-500">{clientWidth} {clientHeight}</span>
   </div>
