@@ -32,7 +32,7 @@
 
     for (const { actionName, keyBindings } of controlKeys) {
       if (keyBindings.includes(key)) {
-        console.log("down", actionName, key);
+        // console.log("down", actionName, key);
         event.preventDefault();
 
         if (actionsActive.includes(actionName)) return;
@@ -47,7 +47,7 @@
 
     for (const { actionName, keyBindings } of controlKeys) {
       if (keyBindings.includes(key)) {
-        console.log("up", actionName, key);
+        // console.log("up", actionName, key);
         event.preventDefault();
 
         if (!actionsActive.includes(actionName)) return;

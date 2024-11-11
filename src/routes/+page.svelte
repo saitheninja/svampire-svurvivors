@@ -3,15 +3,15 @@
 
   interface Map {
     name: string;
+    imagePath: string;
     height: number;
     width: number;
-    imagePath: string;
   }
   const mapForest: Map = {
     name: "forest",
+    imagePath: "./map-forest.svg",
     height: 8000,
     width: 8000,
-    imagePath: "./map-forest.svg",
   };
 
   interface Weapon {
@@ -78,22 +78,14 @@
   // Dragonfly
   // Enemy pathfinding? Move towards middle?
   const enemiesAll = [enemySkeleton, enemyZombie, enemyGoblin];
-  }
 
-  let elGameWindow: HTMLDivElement;
+  // game window
+  let elGameWindow: HTMLDivElement | undefined = $state();
   let clientWidth = $state(0);
   let clientHeight = $state(0);
 
-  function startGame() {
-    // start game loop
-    window.requestAnimationFrame(gameLoop);
-
-    // fullscreen
-    elGameWindow.requestFullscreen();
-  }
-
   // timer
-  let start = $state(0);
+  let timestampStart = $state(0);
   let timerMinutes = $state(0);
   let timerSeconds = $state(0);
 
@@ -104,6 +96,36 @@
   // controls
   let actionsActive: string[] = $state([]);
 
+  function setMap(el: HTMLElement, map: Map) {
+    el.style.backgroundImage = `url(${map.imagePath})`;
+    el.style.backgroundSize = `${map.width}px ${map.height}px`;
+    el.style.backgroundPositionX = `${map.width / 2}px`;
+    el.style.backgroundPositionY = `${map.height / 2}px`;
+  }
+
+  function startGame() {
+    // div doesn't exist yet
+    if (!elGameWindow) {
+      console.error(`No element with id "game-window".`);
+      return;
+    }
+
+    // load map
+    setMap(elGameWindow, mapForest);
+
+    // fullscreen
+    elGameWindow.requestFullscreen();
+
+    // start game loop
+    window.requestAnimationFrame((timestamp) => {
+      // start timer
+      if (timestampStart === 0) timestampStart = timestamp;
+
+      // start game
+      window.requestAnimationFrame(gameLoop);
+    });
+  }
+
   function draw(timestamp: number) {
     // fps
     let secondsPassed = (timestamp - timestampPrev) / 1000;
@@ -112,14 +134,30 @@
     fps = Math.round(1 / secondsPassed);
 
     // timer
-    if (start === 0) start = timestamp;
-
-    const elapsed = timestamp - start;
+    const elapsed = timestamp - timestampStart;
     const secondsSinceStart = Math.floor(elapsed / 1000);
 
     timerMinutes = Math.floor(secondsSinceStart / 60);
     timerSeconds = secondsSinceStart % 60;
 
+    // scroll background
+    if (!elGameWindow) return;
+    let bgX = elGameWindow.style.backgroundPositionX;
+    let bgY = elGameWindow.style.backgroundPositionY;
+
+    bgX.replace("px", "");
+    bgY.replace("px", "");
+
+    let bgXInt = parseInt(bgX);
+    let bgYInt = parseInt(bgY);
+
+    let map = mapForest;
+
+    bgXInt = Math.max(map.width - clientWidth / 2, bgXInt + 1);
+    bgYInt = Math.max(map.height - clientHeight / 2, bgYInt + 1);
+
+    elGameWindow.style.backgroundPositionX = `${bgXInt}px`;
+    elGameWindow.style.backgroundPositionY = `${bgYInt}px`;
   }
 
   function gameLoop(timestamp: number) {
@@ -174,8 +212,11 @@
   </div>
 </div>
 
-<form onsubmit={() => startGame()}>
-  <button>start game</button>
+<form id="form-start-game" onsubmit={() => startGame()}>
+  <button
+    class="m-4 border-b-8 border-red-900 bg-rose-600 px-4 py-2 text-white shadow-md shadow-red-900"
+    >start game</button
+  >
 </form>
 
 <div
@@ -183,9 +224,9 @@
   bind:clientWidth
   bind:clientHeight
   id="game-window"
-  class="grid h-full grid-cols-1"
+  class="grid h-full w-full grid-cols-1"
 >
-  <div id="top-ui" class="z-50 flex flex-row gap-2">
+  <div id="top-ui" class="z-50 flex flex-row gap-2 bg-rose-950">
     <time
       id="timer"
       datetime="PT{timerMinutes}M{timerSeconds}S"
@@ -198,9 +239,15 @@
 
     <span class="text-blue-700">{fps} fps</span>
 
-    <span class="text-green-500">{clientWidth} {clientHeight}</span>
+    <span class="text-green-500">width: {clientWidth}px height:{clientHeight}px</span>
 
-    <span>{JSON.stringify(actionsActive)}</span>
+    {#if elGameWindow}
+      <span class="text-cyan-500">window: {elGameWindow}</span>
+      <span class="text-cyan-500">X: {elGameWindow.style.backgroundPositionX}px</span>
+      <span class="text-cyan-500">Y: {elGameWindow.style.backgroundPositionY}px</span>
+    {/if}
+
+    <span class="text-cyan-500">actions: {actionsActive}</span>
   </div>
 
   <div id="player" class="z-10 m-auto size-8 bg-red-500">
