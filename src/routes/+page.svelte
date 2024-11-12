@@ -10,8 +10,8 @@
   const mapForest: Map = {
     name: "forest",
     imagePath: "./map-forest.svg",
-    height: 8000,
-    width: 8000,
+    height: 4000,
+    width: 4000,
   };
 
   interface Weapon {
@@ -48,7 +48,7 @@
     name: "player",
     health: 100,
     spriteEmoji: "🧔🏾",
-    speed: 10,
+    speed: 50,
     weapons: weaponsAll,
   };
 
@@ -97,10 +97,13 @@
   let actionsActive: string[] = $state([]);
 
   function setMap(el: HTMLElement, map: Map) {
+    // set image properties
     el.style.backgroundImage = `url(${map.imagePath})`;
     el.style.backgroundSize = `${map.width}px ${map.height}px`;
-    el.style.backgroundPositionX = `${map.width / 2}px`;
-    el.style.backgroundPositionY = `${map.height / 2}px`;
+
+    // set position to center
+    el.style.backgroundPositionX = `${(map.width + el.clientWidth) / 2}px`;
+    el.style.backgroundPositionY = `${(map.height + el.clientHeight) / 2}px`;
   }
 
   function startGame() {
@@ -110,11 +113,11 @@
       return;
     }
 
-    // load map
-    setMap(elGameWindow, mapForest);
-
     // fullscreen
     elGameWindow.requestFullscreen();
+
+    // load map
+    setMap(elGameWindow, mapForest);
 
     // start game loop
     window.requestAnimationFrame((timestamp) => {
@@ -142,7 +145,7 @@
 
     // scroll background
     if (!elGameWindow) return;
-    let bgX = elGameWindow.style.backgroundPositionX;
+    let bgX = elGameWindow.style.backgroundPositionX; // 4000px
     let bgY = elGameWindow.style.backgroundPositionY;
 
     bgX.replace("px", "");
@@ -153,8 +156,39 @@
 
     let map = mapForest;
 
-    bgXInt = Math.max(map.width - clientWidth / 2, bgXInt + 1);
-    bgYInt = Math.max(map.height - clientHeight / 2, bgYInt + 1);
+    // parse inputs
+    let moveX = 0;
+    let moveY = 0;
+
+    if (actionsActive.includes("left")) {
+      moveX = moveX + 1;
+    }
+    if (actionsActive.includes("right")) {
+      moveX = moveX - 1;
+    }
+
+    if (actionsActive.includes("down")) {
+      moveY = moveY - 1;
+    }
+    if (actionsActive.includes("up")) {
+      moveY = moveY + 1;
+    }
+
+    // add movement
+    bgXInt = bgXInt + moveX;
+    bgYInt = bgYInt + moveY;
+
+    const widthMin = 0;
+    const widthMax = map.width - clientWidth / 2;
+
+    const heightMin = 0;
+    const heightMax = map.height - clientHeight / 2;
+
+    if (bgXInt < widthMin) bgXInt = widthMin;
+    if (bgXInt > widthMax) bgXInt = widthMax;
+
+    if (bgYInt < heightMin) bgYInt = heightMin;
+    if (bgYInt > heightMax) bgYInt = heightMax;
 
     elGameWindow.style.backgroundPositionX = `${bgXInt}px`;
     elGameWindow.style.backgroundPositionY = `${bgYInt}px`;
@@ -214,19 +248,21 @@
 
 <form id="form-start-game" onsubmit={() => startGame()}>
   <button
-    class="m-4 border-b-8 border-red-900 bg-rose-600 px-4 py-2 text-white shadow-md shadow-red-900"
+    class="m-4 border-b-8 border-red-900 bg-rose-600 px-4 py-2 font-extrabold text-white shadow-md shadow-red-900"
     >start game</button
   >
 </form>
 
 <div
+  id="game-window"
   bind:this={elGameWindow}
   bind:clientWidth
   bind:clientHeight
-  id="game-window"
-  class="grid h-full w-full grid-cols-1"
+  class="flex h-full w-full flex-col bg-gray-800"
 >
-  <div id="top-ui" class="z-50 flex flex-row gap-2 bg-rose-950">
+  <div id="top-ui" class="z-50 flex h-max flex-row gap-2 bg-rose-950">
+    <img src={mapForest.imagePath} alt="Minimap of area {mapForest.name}" class="my-1 size-8" />
+
     <time
       id="timer"
       datetime="PT{timerMinutes}M{timerSeconds}S"
@@ -239,40 +275,39 @@
 
     <span class="text-blue-700">{fps} fps</span>
 
-    <span class="text-green-500">width: {clientWidth}px height:{clientHeight}px</span>
+    <span class="text-green-500">width: {clientWidth}px</span>
+    <span class="text-green-500">height:{clientHeight}px</span>
 
-    {#if elGameWindow}
-      <span class="text-cyan-500">window: {elGameWindow}</span>
-      <span class="text-cyan-500">X: {elGameWindow.style.backgroundPositionX}px</span>
-      <span class="text-cyan-500">Y: {elGameWindow.style.backgroundPositionY}px</span>
-    {/if}
+    <!-- <span class="text-cyan-500">window: {elGameWindow}</span> -->
+    <span class="text-cyan-500">X: {elGameWindow?.style.backgroundPositionX ?? ""}</span>
+    <span class="text-cyan-500">Y: {elGameWindow?.style.backgroundPositionY ?? ""}</span>
 
     <span class="text-cyan-500">actions: {actionsActive}</span>
   </div>
 
-  <div id="player" class="z-10 m-auto size-8 bg-red-500">
-    <span class="text-xl">{player.spriteEmoji}</span>
+  <div id="player" class="z-10 m-auto size-12 overflow-clip bg-cyan-700">
+    <span class="text-5xl">{player.spriteEmoji}</span>
     <span class="sr-only">{player.name}</span>
 
-    {#each player.weapons as weapon}
-      <div class="absolute z-20">
-        <span>{weapon.spriteEmoji}</span>
-        <span class="sr-only">{weapon.name}</span>
-      </div>
-    {/each}
+    <!-- {#each player.weapons as weapon} -->
+    <!--   <div class="absolute z-20"> -->
+    <!--     <span>{weapon.spriteEmoji}</span> -->
+    <!--     <span class="sr-only">{weapon.name}</span> -->
+    <!--   </div> -->
+    <!-- {/each} -->
   </div>
 
-  {#each enemiesAll as enemy}
-    <div class="z-0 m-auto">
-      <span>{enemy.spriteEmoji}</span>
-      <span class="sr-only">{enemy.name}</span>
-
-      {#each enemy.weapons as weapon}
-        <div class="absolute">
-          <span>{weapon.spriteEmoji}</span>
-          <span class="sr-only">{weapon.name}</span>
-        </div>
-      {/each}
-    </div>
-  {/each}
+  <!-- {#each enemiesAll as enemy} -->
+  <!--   <div class="z-0 m-auto"> -->
+  <!--     <span>{enemy.spriteEmoji}</span> -->
+  <!--     <span class="sr-only">{enemy.name}</span> -->
+  <!---->
+  <!--     {#each enemy.weapons as weapon} -->
+  <!--       <div class="absolute"> -->
+  <!--         <span>{weapon.spriteEmoji}</span> -->
+  <!--         <span class="sr-only">{weapon.name}</span> -->
+  <!--       </div> -->
+  <!--     {/each} -->
+  <!--   </div> -->
+  <!-- {/each} -->
 </div>
