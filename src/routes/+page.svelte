@@ -79,10 +79,9 @@
   // Enemy pathfinding? Move towards middle?
   const enemiesAll = [enemySkeleton, enemyZombie, enemyGoblin];
 
-  // game window
+  // game
   let elGameWindow: HTMLDivElement | undefined = $state();
-  let clientWidth = $state(0);
-  let clientHeight = $state(0);
+  let elPlayer: HTMLDivElement | undefined = $state();
 
   // timer
   let timestampStart = $state(0);
@@ -112,12 +111,16 @@
       console.error(`No element with id "game-window".`);
       return;
     }
+    if (!elPlayer) {
+      console.error(`No element with id "player".`);
+      return;
+    }
 
     // fullscreen
     elGameWindow.requestFullscreen();
 
     // load map
-    setMap(elGameWindow, mapForest);
+    setMap(elPlayer, mapForest);
 
     // start game loop
     window.requestAnimationFrame((timestamp) => {
@@ -144,9 +147,9 @@
     timerSeconds = secondsSinceStart % 60;
 
     // scroll background
-    if (!elGameWindow) return;
-    let bgX = elGameWindow.style.backgroundPositionX; // 4000px
-    let bgY = elGameWindow.style.backgroundPositionY;
+    if (!elPlayer) return;
+    let bgX = elPlayer.style.backgroundPositionX; // 4000px
+    let bgY = elPlayer.style.backgroundPositionY;
 
     bgX.replace("px", "");
     bgY.replace("px", "");
@@ -179,10 +182,10 @@
     bgYInt = bgYInt + moveY;
 
     const widthMin = 0;
-    const widthMax = map.width - clientWidth / 2;
+    const widthMax = map.width - elPlayer.clientWidth / 2;
 
     const heightMin = 0;
-    const heightMax = map.height - clientHeight / 2;
+    const heightMax = map.height - elPlayer.clientHeight / 2;
 
     if (bgXInt < widthMin) bgXInt = widthMin;
     if (bgXInt > widthMax) bgXInt = widthMax;
@@ -190,8 +193,8 @@
     if (bgYInt < heightMin) bgYInt = heightMin;
     if (bgYInt > heightMax) bgYInt = heightMax;
 
-    elGameWindow.style.backgroundPositionX = `${bgXInt}px`;
-    elGameWindow.style.backgroundPositionY = `${bgYInt}px`;
+    elPlayer.style.backgroundPositionX = `${bgXInt}px`;
+    elPlayer.style.backgroundPositionY = `${bgYInt}px`;
   }
 
   function gameLoop(timestamp: number) {
@@ -253,13 +256,7 @@
   >
 </form>
 
-<div
-  id="game-window"
-  bind:this={elGameWindow}
-  bind:clientWidth
-  bind:clientHeight
-  class="flex h-full w-full flex-col bg-gray-800"
->
+<div id="game-window" bind:this={elGameWindow} class="flex flex-col bg-gray-800">
   <div id="top-ui" class="z-50 flex h-max flex-row gap-2 bg-rose-950">
     <img src={mapForest.imagePath} alt="Minimap of area {mapForest.name}" class="my-1 size-8" />
 
@@ -275,19 +272,21 @@
 
     <span class="text-blue-700">{fps} fps</span>
 
-    <span class="text-green-500">width: {clientWidth}px</span>
-    <span class="text-green-500">height:{clientHeight}px</span>
-
-    <!-- <span class="text-cyan-500">window: {elGameWindow}</span> -->
-    <span class="text-cyan-500">X: {elGameWindow?.style.backgroundPositionX ?? ""}</span>
-    <span class="text-cyan-500">Y: {elGameWindow?.style.backgroundPositionY ?? ""}</span>
+    <span class="text-cyan-500">X: {elPlayer?.style.backgroundPositionX ?? ""}</span>
+    <span class="text-cyan-500">Y: {elPlayer?.style.backgroundPositionY ?? ""}</span>
 
     <span class="text-cyan-500">actions: {actionsActive}</span>
   </div>
 
-  <div id="player" class="z-10 m-auto size-12 overflow-clip bg-cyan-700">
-    <span class="text-5xl">{player.spriteEmoji}</span>
-    <span class="sr-only">{player.name}</span>
+  <div
+    bind:this={elPlayer}
+    id="player"
+    class="z-10 grid h-full w-full grid-cols-1 items-center bg-purple-900"
+  >
+    <div id="player-sprite" class="mx-auto size-12 bg-blue-800">
+      <span class="-ml-1 text-5xl">{player.spriteEmoji}</span>
+      <span class="sr-only">{player.name}</span>
+    </div>
 
     <!-- {#each player.weapons as weapon} -->
     <!--   <div class="absolute z-20"> -->
