@@ -77,7 +77,20 @@
   // Dog
   // Dragonfly
   // Enemy pathfinding? Move towards middle?
-  const enemiesAll = [enemySkeleton, enemyZombie, enemyGoblin];
+  const enemyWave: Alive[] = [
+    enemySkeleton,
+    enemySkeleton,
+    enemySkeleton,
+    enemySkeleton,
+    enemySkeleton,
+    enemySkeleton,
+    enemySkeleton,
+    enemyZombie,
+    enemyZombie,
+    enemyGoblin,
+    enemyZombie,
+    enemyZombie,
+  ];
 
   // game
   let elGameWindow: HTMLDivElement | undefined = $state();
@@ -204,23 +217,71 @@
 
     window.requestAnimationFrame(gameLoop);
   }
+
+  function spawnEnemyWaveCircle(el: HTMLDivElement, wave: Alive[]) {
+    // Roll for upgraded monster that drops treasure chest on defeat
+
+    const distance = 300;
+    const spread = 360 / wave.length;
+    // size-8 = 2rem = 32px
+    // size-12 = 3rem = 48px
+    const spriteOffset = 16;
+
+    wave.forEach((enemy, i) => {
+      // create enemy
+      const elEnemyEmoji = document.createElement("span");
+      elEnemyEmoji.classList.add("-ml-1");
+      elEnemyEmoji.classList.add("text-5xl");
+      elEnemyEmoji.textContent = enemy.spriteEmoji;
+
+      const elEnemyName = document.createElement("span");
+      elEnemyName.classList.add("sr-only");
+      elEnemyName.textContent = enemy.name;
+
+      const elEnemySprite = document.createElement("div");
+      elEnemySprite.classList.add("size-12");
+      elEnemySprite.classList.add("bg-lime-500");
+      elEnemySprite.appendChild(elEnemyEmoji);
+      elEnemySprite.appendChild(elEnemyName);
+
+      const elEnemy = document.createElement("div");
+      elEnemy.classList.add("absolute");
+      elEnemy.appendChild(elEnemySprite);
+
+      // add to game
+      el.appendChild(elEnemy);
+
+      // calc x, y
+      const angle = spread * i;
+      const rads = angle * (Math.PI / 180);
+      const x = Math.round(Math.cos(rads) * distance);
+      const y = Math.round(Math.sin(rads) * distance);
+
+      const right = el.clientWidth;
+      const top = el.clientHeight;
+      console.log(i, angle, x, y, right, top);
+
+      elEnemy.style.left = `${el.clientWidth / 2 + x - spriteOffset}px`;
+      elEnemy.style.top = `${el.clientHeight / 2 + y + spriteOffset}px`;
+    });
+  }
 </script>
 
 <Controls bind:actionsActive />
 
-<div>
-  <h1>Svampire Svurvivors</h1>
+<h1>Svampire Svurvivors</h1>
 
-  <div>
-    <p>
+<details>
+  <summary>
+    <span>
       It's like <a
         href="https://store.steampowered.com/app/1794680/Vampire_Survivors/"
         class="underline">Vampire Survivors</a
       >, but built with Svelte, for the web.
-    </p>
+    </span>
 
-    <p>I am so funny haha.</p>
-  </div>
+    <span>I am so funny haha.</span>
+  </summary>
 
   <div>
     <p>Links:</p>
@@ -247,7 +308,7 @@
       <li>camera that follows player</li>
     </ul>
   </div>
-</div>
+</details>
 
 <form id="form-start-game" onsubmit={() => startGame()}>
   <button
@@ -276,6 +337,17 @@
     <span class="text-cyan-500">Y: {elPlayer?.style.backgroundPositionY ?? ""}</span>
 
     <span class="text-cyan-500">actions: {actionsActive}</span>
+
+    <form
+      onsubmit={(event) => {
+        event.preventDefault();
+
+        if (!elPlayer) return;
+        spawnEnemyWaveCircle(elPlayer, enemyWave);
+      }}
+    >
+      <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
+    </form>
   </div>
 
   <div

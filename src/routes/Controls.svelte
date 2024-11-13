@@ -24,7 +24,7 @@
       keyBindings: ["d", "ArrowRight"],
     },
   ];
-  const showBindings = true;
+  const showBindings = false;
 
   function onkeydown(event: KeyboardEvent) {
     const key = event.key;
