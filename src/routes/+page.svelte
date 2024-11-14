@@ -92,24 +92,22 @@
     enemyZombie,
   ];
 
-  // start game
-  let isInfoShown = $state(true);
-
   // game
-  let innerWidth = $state(0);
-  let innerHeight = $state(0);
   let elGameWindow: HTMLDivElement | undefined = $state();
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
-
-  // timer
-  let timestampStart = $state(0);
-  let timerMinutes = $state(0);
-  let timerSeconds = $state(0);
+  let isInfoShown = $state(true);
+  let isPaused = $state(false);
 
   // fps
   let timestampPrev = $state(0);
-  let fps = $state(0);
+  let timeSincePrevFrame = $state(0);
+  let fps = $derived(Math.round(1000 / timeSincePrevFrame));
+
+  // timer
+  let timeElapsed = $state(0);
+  let timerMinutes = $derived(Math.floor(timeElapsed / 1000 / 60));
+  let timerSeconds = $derived(Math.floor((timeElapsed / 1000) % 60));
 
   // controls
   let actionsActive: string[] = $state([]);
@@ -123,19 +121,6 @@
     el.style.backgroundImage = `url(${terrain.imagePath})`;
     el.style.backgroundSize = `${terrain.width}px ${terrain.height}px`;
     el.style.backgroundRepeat = "no-repeat";
-
-    // set position to center
-    // triggers before fullscreen with el.clientWidth,Height
-    // console.log(el.clientWidth, el.clientHeight);
-    // el.style.backgroundPositionX = `-${(terrain.width - innerWidth) / 2}px`;
-    // el.style.backgroundPositionY = `-${(terrain.height - innerHeight) / 2}px`;
-
-    // el.scrollIntoView();
-    if (!elWorld) return;
-    elWorld.scrollTo({
-      top: (terrain.height - elWorld.clientHeight) / 2,
-      left: (terrain.width - elWorld.clientWidth) / 2,
-    });
   }
 
   function startGame() {
@@ -169,17 +154,17 @@
     // load map
     setTerrain(elTerrain, terrainForest);
 
+    // scroll to center
+    elWorld.scrollTo({
+      top: (elWorld.scrollHeight - elWorld.clientHeight) / 2,
+      left: (elWorld.scrollWidth - elWorld.clientWidth) / 2,
+    });
+
     // close info window
     isInfoShown = false;
 
     // start game loop
-    window.requestAnimationFrame((timestamp) => {
-      // start timer
-      if (timestampStart === 0) timestampStart = timestamp;
-
-      // start game
-      window.requestAnimationFrame(gameLoop);
-    });
+    window.requestAnimationFrame(gameLoop);
   }
 
   function parseInputs() {
@@ -203,66 +188,25 @@
     return { x: moveX, y: moveY };
   }
 
-  function drawUi(timestamp: number) {
-    // fps
-    let secondsPassed = (timestamp - timestampPrev) / 1000;
-    timestampPrev = timestamp;
-
-    fps = Math.round(1 / secondsPassed);
-
-    // timer
-    const elapsed = timestamp - timestampStart;
-    const secondsSinceStart = Math.floor(elapsed / 1000);
-
-    timerMinutes = Math.floor(secondsSinceStart / 60);
-    timerSeconds = secondsSinceStart % 60;
-  }
-
-  function drawWorld(timestamp: number, el: HTMLDivElement, terrain: Terrain) {
-    // scroll background
-    // let bgX = el.style.backgroundPositionX; // -2000px
-    // let bgY = el.style.backgroundPositionY;
-    //
-    // bgX.replace("px", "");
-    // bgY.replace("px", "");
-    //
-    // let bgXFloat = parseFloat(bgX);
-    // let bgYFloat = parseFloat(bgY);
-
-    // add movement
-    const move = parseInputs();
-    const distance = (player.speed / 2) * (timestamp - timestampPrev);
-
-    // bgXFloat = bgXFloat + move.x * distance;
-    // bgYFloat = bgYFloat + move.y * distance;
-
-    // cap x,y to map extents
-    // const widthMax = 0;
-    // const widthMin = -terrain.width;
-    //
-    // const heightMax = 0;
-    // const heightMin = -terrain.height;
-    //
-    // if (bgXFloat < widthMin) bgXFloat = widthMin;
-    // if (bgXFloat > widthMax) bgXFloat = widthMax;
-    //
-    // if (bgYFloat < heightMin) bgYFloat = heightMin;
-    // if (bgYFloat > heightMax) bgYFloat = heightMax;
-
-    // set new position
-    // el.style.backgroundPositionX = `${bgXFloat}px`;
-    // el.style.backgroundPositionY = `${bgYFloat}px`;
-
-    el.scrollBy({ top: move.y * distance, left: move.x * distance });
-  }
-
   function gameLoop(timestamp: number) {
     // timestamp: DOMHighResTimeStamp
     // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
 
-    if (!elWorld) return;
-    drawWorld(timestamp, elWorld, terrainForest);
-    drawUi(timestamp);
+    // fps
+    timeSincePrevFrame = timestamp - timestampPrev;
+    timestampPrev = timestamp;
+
+    // timer
+    if (!isPaused) timeElapsed += timeSincePrevFrame;
+
+    // player movement
+    const move = parseInputs();
+    const distance = (player.speed / 2) * timeSincePrevFrame;
+
+    // scroll world
+    if (elWorld && !isPaused) {
+      elWorld.scrollBy({ top: move.y * distance, left: move.x * distance });
+    }
 
     window.requestAnimationFrame(gameLoop);
   }
@@ -329,8 +273,6 @@
 
 </script>
 
-<svelte:window bind:innerWidth bind:innerHeight />
-
 <Controls bind:actionsActive />
 
 <div
@@ -373,6 +315,22 @@
       }}
     >
       <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
+    </form>
+
+    <form
+      onsubmit={(event) => {
+        event.preventDefault();
+
+        isPaused = !isPaused;
+      }}
+    >
+      <button class="bg-rose-900 px-4 py-1 font-extrabold">
+        {#if !isPaused}
+          pause
+        {:else}
+          unpause
+        {/if}
+      </button>
     </form>
   </div>
 
