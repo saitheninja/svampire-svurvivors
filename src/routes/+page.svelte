@@ -1,15 +1,15 @@
 <script lang="ts">
   import Controls from "./Controls.svelte";
 
-  interface Map {
+  interface Terrain {
     name: string;
     imagePath: string;
     height: number;
     width: number;
   }
-  const mapForest: Map = {
+  const terrainForest: Terrain = {
     name: "forest",
-    imagePath: "./map-forest.svg",
+    imagePath: "./terrain-forest.svg",
     height: 4000,
     width: 4000,
   };
@@ -48,7 +48,7 @@
     name: "player",
     health: 100,
     spriteEmoji: "🧔🏾",
-    speed: 50,
+    speed: 1,
     weapons: weaponsAll,
   };
 
@@ -93,7 +93,11 @@
   ];
 
   // game
+  let innerWidth = $state(0);
+  let innerHeight = $state(0);
   let elGameWindow: HTMLDivElement | undefined = $state();
+  let elWorld: HTMLDivElement | undefined = $state();
+  // let elTerrain: HTMLDivElement | undefined = $state();
   let elPlayer: HTMLDivElement | undefined = $state();
 
   // timer
@@ -108,14 +112,28 @@
   // controls
   let actionsActive: string[] = $state([]);
 
-  function setMap(el: HTMLElement, map: Map) {
-    // set image properties
-    el.style.backgroundImage = `url(${map.imagePath})`;
-    el.style.backgroundSize = `${map.width}px ${map.height}px`;
+  function setTerrain(el: HTMLElement, terrain: Terrain) {
+    // set dimensions
+    // el.style.width = `${terrain.width}px`;
+    // el.style.height = `${terrain.height}px`;
+
+    // set background
+    el.style.backgroundImage = `url(${terrain.imagePath})`;
+    el.style.backgroundSize = `${terrain.width}px ${terrain.height}px`;
+    el.style.backgroundRepeat = "no-repeat";
+    // el.style.backgroundPosition = "center";
 
     // set position to center
-    el.style.backgroundPositionX = `${(map.width + el.clientWidth) / 2}px`;
-    el.style.backgroundPositionY = `${(map.height + el.clientHeight) / 2}px`;
+    // triggers before fullscreen with el.clientWidth,Height
+    // console.log(el.clientWidth, el.clientHeight);
+    el.style.backgroundPositionX = `-${(terrain.width - innerWidth) / 2}px`;
+    el.style.backgroundPositionY = `-${(terrain.height - innerHeight) / 2}px`;
+
+    // el.scrollIntoView();
+    // window.scrollTo({
+    //   top: (terrain.height + el.clientHeight) / 2,
+    //   left: (terrain.width + el.clientHeight) / 2,
+    // });
   }
 
   function startGame() {
@@ -124,6 +142,14 @@
       console.error(`No element with id "game-window".`);
       return;
     }
+    if (!elWorld) {
+      console.error(`No element with id "world".`);
+      return;
+    }
+    // if (!elTerrain) {
+    //   console.error(`No element with id "terrain".`);
+    //   return;
+    // }
     if (!elPlayer) {
       console.error(`No element with id "player".`);
       return;
@@ -133,7 +159,7 @@
     elGameWindow.requestFullscreen();
 
     // load map
-    setMap(elPlayer, mapForest);
+    setTerrain(elWorld, terrainForest);
 
     // start game loop
     window.requestAnimationFrame((timestamp) => {
@@ -145,34 +171,7 @@
     });
   }
 
-  function draw(timestamp: number) {
-    // fps
-    let secondsPassed = (timestamp - timestampPrev) / 1000;
-    timestampPrev = timestamp;
-
-    fps = Math.round(1 / secondsPassed);
-
-    // timer
-    const elapsed = timestamp - timestampStart;
-    const secondsSinceStart = Math.floor(elapsed / 1000);
-
-    timerMinutes = Math.floor(secondsSinceStart / 60);
-    timerSeconds = secondsSinceStart % 60;
-
-    // scroll background
-    if (!elPlayer) return;
-    let bgX = elPlayer.style.backgroundPositionX; // 4000px
-    let bgY = elPlayer.style.backgroundPositionY;
-
-    bgX.replace("px", "");
-    bgY.replace("px", "");
-
-    let bgXInt = parseInt(bgX);
-    let bgYInt = parseInt(bgY);
-
-    let map = mapForest;
-
-    // parse inputs
+  function parseInputs() {
     let moveX = 0;
     let moveY = 0;
 
@@ -190,15 +189,50 @@
       moveY = moveY + 1;
     }
 
+    return { x: moveX, y: moveY };
+  }
+
+  function drawUi(timestamp: number) {
+    // fps
+    let secondsPassed = (timestamp - timestampPrev) / 1000;
+    timestampPrev = timestamp;
+
+    fps = Math.round(1 / secondsPassed);
+
+    // timer
+    const elapsed = timestamp - timestampStart;
+    const secondsSinceStart = Math.floor(elapsed / 1000);
+
+    timerMinutes = Math.floor(secondsSinceStart / 60);
+    timerSeconds = secondsSinceStart % 60;
+  }
+
+  function drawWorld(timestamp: number, el: HTMLDivElement, terrain: Terrain) {
+    // scroll background
+    let bgX = el.style.backgroundPositionX; // -2000px
+    let bgY = el.style.backgroundPositionY;
+
+    bgX.replace("px", "");
+    bgY.replace("px", "");
+
+    let bgXInt = parseFloat(bgX);
+    let bgYInt = parseFloat(bgY);
+
+    // let scrollX = window.scrollX;
+    // let scrollY = window.scrollY;
+
     // add movement
-    bgXInt = bgXInt + moveX;
-    bgYInt = bgYInt + moveY;
+    const move = parseInputs();
+    const distance = (player.speed * (timestamp - timestampPrev)) / 10;
 
-    const widthMin = 0;
-    const widthMax = map.width - elPlayer.clientWidth / 2;
+    bgXInt = bgXInt + move.x * distance;
+    bgYInt = bgYInt + move.y * distance;
 
-    const heightMin = 0;
-    const heightMax = map.height - elPlayer.clientHeight / 2;
+    const widthMax = 0;
+    const widthMin = -terrain.width;
+
+    const heightMax = 0;
+    const heightMin = -terrain.height;
 
     if (bgXInt < widthMin) bgXInt = widthMin;
     if (bgXInt > widthMax) bgXInt = widthMax;
@@ -206,14 +240,19 @@
     if (bgYInt < heightMin) bgYInt = heightMin;
     if (bgYInt > heightMax) bgYInt = heightMax;
 
-    elPlayer.style.backgroundPositionX = `${bgXInt}px`;
-    elPlayer.style.backgroundPositionY = `${bgYInt}px`;
+    el.style.backgroundPositionX = `${bgXInt}px`;
+    el.style.backgroundPositionY = `${bgYInt}px`;
+
+    // el.scrollTo(bgXInt, bgYInt);
   }
 
   function gameLoop(timestamp: number) {
     // timestamp: DOMHighResTimeStamp
     // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
-    draw(timestamp);
+
+    if (!elWorld) return;
+    drawWorld(timestamp, elWorld, terrainForest);
+    drawUi(timestamp);
 
     window.requestAnimationFrame(gameLoop);
   }
@@ -267,6 +306,8 @@
   }
 </script>
 
+<svelte:window bind:innerWidth bind:innerHeight />
+
 <Controls bind:actionsActive />
 
 <h1>Svampire Svurvivors</h1>
@@ -319,7 +360,11 @@
 
 <div id="game-window" bind:this={elGameWindow} class="flex flex-col bg-gray-800">
   <div id="top-ui" class="z-50 flex h-max flex-row gap-2 bg-rose-950">
-    <img src={mapForest.imagePath} alt="Minimap of area {mapForest.name}" class="my-1 size-8" />
+    <img
+      src={terrainForest.imagePath}
+      alt="Minimap of {terrainForest.name} area."
+      class="my-1 size-8"
+    />
 
     <time
       id="timer"
@@ -333,8 +378,10 @@
 
     <span class="text-blue-700">{fps} fps</span>
 
-    <span class="text-cyan-500">X: {elPlayer?.style.backgroundPositionX ?? ""}</span>
-    <span class="text-cyan-500">Y: {elPlayer?.style.backgroundPositionY ?? ""}</span>
+    <span class="text-cyan-500">X: {elWorld?.style.backgroundPositionX ?? "no"}</span>
+    <span class="text-cyan-500">Y: {elWorld?.style.backgroundPositionY ?? "no"}</span>
+    <!-- <span class="text-cyan-500">width: {elWorld?.clientWidth ?? "no"}</span> -->
+    <!-- <span class="text-cyan-500">height: {elWorld?.clientHeight ?? "no"}</span> -->
 
     <span class="text-cyan-500">actions: {actionsActive}</span>
 
@@ -350,35 +397,23 @@
     </form>
   </div>
 
-  <div
-    bind:this={elPlayer}
-    id="player"
-    class="z-10 grid h-full w-full grid-cols-1 items-center bg-purple-900"
-  >
-    <div id="player-sprite" class="mx-auto size-12 bg-blue-800">
-      <span class="-ml-1 text-5xl">{player.spriteEmoji}</span>
-      <span class="sr-only">{player.name}</span>
+  <div bind:this={elWorld} id="world" class="h-full bg-purple-900">
+    <!-- <div bind:this={elTerrain} id="terrain"></div> -->
+
+    <div bind:this={elPlayer} id="player" class="z-10 flex-grow">
+      <div id="player-sprite" class="mx-auto my-auto size-12 max-h-max max-w-max bg-blue-800">
+        <span class="-ml-1 text-5xl">{player.spriteEmoji}</span>
+        <span class="sr-only">{player.name}</span>
+      </div>
+
+      <!-- {#each player.weapons as weapon} -->
+      <!--   <div class="absolute z-20"> -->
+      <!--     <span>{weapon.spriteEmoji}</span> -->
+      <!--     <span class="sr-only">{weapon.name}</span> -->
+      <!--   </div> -->
+      <!-- {/each} -->
     </div>
 
-    <!-- {#each player.weapons as weapon} -->
-    <!--   <div class="absolute z-20"> -->
-    <!--     <span>{weapon.spriteEmoji}</span> -->
-    <!--     <span class="sr-only">{weapon.name}</span> -->
-    <!--   </div> -->
-    <!-- {/each} -->
+    <!-- enemies go here -->
   </div>
-
-  <!-- {#each enemiesAll as enemy} -->
-  <!--   <div class="z-0 m-auto"> -->
-  <!--     <span>{enemy.spriteEmoji}</span> -->
-  <!--     <span class="sr-only">{enemy.name}</span> -->
-  <!---->
-  <!--     {#each enemy.weapons as weapon} -->
-  <!--       <div class="absolute"> -->
-  <!--         <span>{weapon.spriteEmoji}</span> -->
-  <!--         <span class="sr-only">{weapon.name}</span> -->
-  <!--       </div> -->
-  <!--     {/each} -->
-  <!--   </div> -->
-  <!-- {/each} -->
 </div>
