@@ -276,11 +276,7 @@
 
 <Controls bind:actionsActive />
 
-<div
-  id="game-window"
-  bind:this={elGameWindow}
-  class="flex max-h-screen flex-col overflow-clip bg-gray-800"
->
+<div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
   <div id="top-ui" class="z-50 flex max-h-max flex-row gap-2 bg-rose-950">
     <img
       src={terrainForest.imagePath}
@@ -336,8 +332,22 @@
   </div>
 
   {#if isInfoShown === true}
-    <div id="info">
-      <h1>Svampire Svurvivors</h1>
+    <div id="info" class="mx-auto my-auto max-w-max">
+      <h1 class="text-center text-xl font-extrabold">Svampire Svurvivors</h1>
+
+      <form
+        id="form-start-game"
+        onsubmit={(event) => {
+          event.preventDefault();
+          startGame();
+        }}
+        class="mx-auto max-w-max"
+      >
+        <button
+          class="m-4 border-b-8 border-red-900 bg-rose-600 px-4 py-2 font-extrabold text-white shadow-md shadow-red-900"
+          >start game</button
+        >
+      </form>
 
       <details>
         <summary>
@@ -379,24 +389,11 @@
           </ul>
         </div>
       </details>
-
-      <form
-        id="form-start-game"
-        onsubmit={(event) => {
-          event.preventDefault();
-          startGame();
-        }}
-      >
-        <button
-          class="m-4 border-b-8 border-red-900 bg-rose-600 px-4 py-2 font-extrabold text-white shadow-md shadow-red-900"
-          >start game</button
-        >
-      </form>
     </div>
   {/if}
 
   <div bind:this={elWorld} id="world" class="overflow-auto bg-purple-900">
-    <div bind:this={elTerrain} id="terrain" class="min-h-screen">
+    <div bind:this={elTerrain} id="terrain">
       <!-- enemies go here -->
     </div>
 
