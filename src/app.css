@@ -2,9 +2,70 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* fonts & text */
 @layer base {
   :root {
     @apply font-serif;
     @apply bg-gray-800 text-gray-50;
+  }
+}
+
+/* scroll bar */
+/* https://developer.chrome.com/docs/css-ui/scrollbar-styling */
+@layer utilities {
+  :root {
+    /* --tw-color-rose-50: theme("colors.rose.50"); */
+    /* --tw-color-rose-100: theme("colors.rose.100"); */
+    /* --tw-color-rose-200: theme("colors.rose.200"); */
+    /* --tw-color-rose-300: theme("colors.rose.300"); */
+    /* --tw-color-rose-400: theme("colors.rose.400"); */
+    /* --tw-color-rose-500: theme("colors.rose.500"); */
+    /* --tw-color-rose-600: theme("colors.rose.600"); */
+    /* --tw-color-rose-700: theme("colors.rose.700"); */
+    /* --tw-color-rose-800: theme("colors.rose.800"); */
+    /* --tw-color-rose-900: theme("colors.rose.900"); */
+    /* --tw-color-rose-950: theme("colors.rose.950"); */
+    /* --tw-color-red-50: theme("colors.red.50"); */
+    /* --tw-color-red-100: theme("colors.red.100"); */
+    /* --tw-color-red-200: theme("colors.red.200"); */
+    /* --tw-color-red-300: theme("colors.red.300"); */
+    /* --tw-color-red-400: theme("colors.red.400"); */
+    /* --tw-color-red-500: theme("colors.red.500"); */
+    /* --tw-color-red-600: theme("colors.red.600"); */
+    /* --tw-color-red-700: theme("colors.red.700"); */
+    /* --tw-color-red-800: theme("colors.red.800"); */
+    --tw-color-red-900: theme("colors.red.900");
+    /* --tw-color-red-950: theme("colors.red.950"); */
+
+    --scrollbar-color-thumb: var(--tw-color-red-900);
+    --scrollbar-color-track: black;
+    /* --scrollbar-width: thin; */
+    /* --scrollbar-width-legacy: 10px; */
+  }
+
+  /* Modern browsers with `scrollbar-*` support */
+  @supports (scrollbar-width: auto) {
+    .scrollbar {
+      scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
+      /* scrollbar-width: var(--scrollbar-width); */
+    }
+  }
+
+  /* Legacy browsers with `::-webkit-scrollbar-*` support */
+  @supports selector(::-webkit-scrollbar) {
+    .scrollbar::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-color-thumb);
+    }
+    .scrollbar::-webkit-scrollbar-track {
+      background: var(--scrollbar-color-track);
+    }
+    /* .scroller::-webkit-scrollbar { */
+    /*     max-width: var(--scrollbar-width-legacy); */
+    /*     max-height: var(--scrollbar-width-legacy); */
+    /* } */
+  }
+
+  body {
+    @apply scrollbar;
   }
 }
