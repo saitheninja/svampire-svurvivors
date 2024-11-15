@@ -7,6 +7,7 @@
     height: number;
     width: number;
   }
+
   const terrainForest: Terrain = {
     name: "forest",
     imagePath: "./terrain-forest.svg",
@@ -38,6 +39,7 @@
 
   interface Alive {
     name: string;
+    colorClass: string;
     health: number;
     spriteEmoji: string;
     speed: number;
@@ -46,6 +48,7 @@
 
   const player: Alive = {
     name: "player",
+    colorClass: "bg-blue-900",
     health: 100,
     spriteEmoji: "🧔🏾",
     speed: 1,
@@ -54,6 +57,7 @@
 
   const enemySkeleton: Alive = {
     name: "skeleton",
+    colorClass: "bg-lime-500",
     health: 1,
     spriteEmoji: "💀",
     speed: 2,
@@ -61,6 +65,7 @@
   };
   const enemyZombie: Alive = {
     name: "zombie",
+    colorClass: "bg-lime-500",
     health: 4,
     spriteEmoji: "🧟",
     speed: 5,
@@ -68,6 +73,7 @@
   };
   const enemyGoblin: Alive = {
     name: "goblin",
+    colorClass: "bg-red-500",
     health: 10,
     spriteEmoji: "👺",
     speed: 1,
@@ -77,6 +83,7 @@
   // Dog
   // Dragonfly
   // Enemy pathfinding? Move towards middle?
+
   const enemyWave: Alive[] = [
     enemySkeleton,
     enemySkeleton,
@@ -112,7 +119,8 @@
   // controls
   let actionsActive: string[] = $state([]);
 
-  function setTerrain(el: HTMLElement, terrain: Terrain) {
+  // Attach `terrain` as backgroundImage for `el`.
+  function setTerrain(el: HTMLElement, terrain: Terrain): void {
     // set dimensions
     el.style.width = `${terrain.width}px`;
     el.style.height = `${terrain.height}px`;
@@ -123,7 +131,105 @@
     el.style.backgroundRepeat = "no-repeat";
   }
 
-  function startGame() {
+  // Trigger game logic.
+  function gameLoop(timestamp: number) {
+    // timestamp: DOMHighResTimeStamp
+    // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
+
+    // fps
+    timeSincePrevFrame = timestamp - timestampPrev;
+    timestampPrev = timestamp;
+
+    // timer
+    if (!isPaused) timeElapsed += timeSincePrevFrame;
+
+    // parse inputs
+    let moveX = 0;
+    let moveY = 0;
+
+    if (actionsActive.includes("left")) moveX = moveX - 1;
+    if (actionsActive.includes("right")) moveX = moveX + 1;
+    if (actionsActive.includes("down")) moveY = moveY + 1;
+    if (actionsActive.includes("up")) moveY = moveY - 1;
+
+    // player movement
+    const distance = (player.speed / 2) * timeSincePrevFrame;
+
+    // scroll world
+    if (elWorld && !isPaused) {
+      elWorld.scrollBy({
+        top: moveY * distance,
+        left: moveX * distance,
+      });
+    }
+
+    window.requestAnimationFrame(gameLoop);
+  }
+
+  // Generate div for `alive`.
+  function generateDiv(alive: Alive): HTMLDivElement {
+    const elEmoji = document.createElement("span");
+    elEmoji.classList.add("-ml-1");
+    elEmoji.classList.add("text-5xl");
+    elEmoji.textContent = alive.spriteEmoji;
+
+    const elName = document.createElement("span");
+    elName.classList.add("sr-only");
+    elName.textContent = alive.name;
+
+    const elSprite = document.createElement("div");
+    elSprite.classList.add(alive.colorClass);
+    elSprite.classList.add("size-12");
+
+    elSprite.appendChild(elEmoji);
+    elSprite.appendChild(elName);
+
+    const elDiv = document.createElement("div");
+    elDiv.classList.add("absolute");
+    elDiv.classList.add("max-w-full");
+    elDiv.classList.add("max-h-full");
+
+    elDiv.appendChild(elSprite);
+
+    return elDiv;
+  }
+
+  // Spawn each enemy in `wave`, and attach it to `el`.
+  function spawnEnemyWaveCircle(el: HTMLDivElement, wave: Alive[]): void {
+    // Roll for upgraded monster that drops treasure chest on defeat
+
+    const distance = 300;
+    const spread = 360 / wave.length;
+    // size-12 = 3rem = 48px
+    const spriteOffset = 24;
+
+    wave.forEach((enemy, i) => {
+      const elEnemy = generateDiv(enemy);
+
+      // add to game
+      el.appendChild(elEnemy);
+
+      // calc x, y
+      const angle = spread * i;
+      const rads = angle * (Math.PI / 180);
+      const x = Math.round(Math.cos(rads) * distance);
+      const y = Math.round(Math.sin(rads) * distance);
+
+      const right = el.clientWidth;
+      const top = el.clientHeight;
+      console.log(i, angle, x, y, right, top);
+
+      elEnemy.style.left = `${el.clientWidth / 2 + x - spriteOffset}px`;
+      elEnemy.style.top = `${el.clientHeight / 2 + y + spriteOffset}px`;
+    });
+  }
+
+
+
+
+  // Generate game state.
+  // Attached to UI button.
+  function startGame(): void {
     // div doesn't exist yet
     if (!elGameWindow) {
       console.error(`No element with id "game-window".`);
@@ -142,7 +248,7 @@
     elGameWindow.requestFullscreen();
 
     // spawn player
-    const elPlayer = spawnElLife(player);
+    const elPlayer = generateDiv(player);
     elPlayer.id = "player";
     const spriteOffset = 24;
     elPlayer.style.left = `${elWorld.clientWidth / 2 - spriteOffset}px`;
@@ -166,111 +272,6 @@
     // start game loop
     window.requestAnimationFrame(gameLoop);
   }
-
-  function parseInputs() {
-    let moveX = 0;
-    let moveY = 0;
-
-    if (actionsActive.includes("left")) {
-      moveX = moveX - 1;
-    }
-    if (actionsActive.includes("right")) {
-      moveX = moveX + 1;
-    }
-
-    if (actionsActive.includes("down")) {
-      moveY = moveY + 1;
-    }
-    if (actionsActive.includes("up")) {
-      moveY = moveY - 1;
-    }
-
-    return { x: moveX, y: moveY };
-  }
-
-  function gameLoop(timestamp: number) {
-    // timestamp: DOMHighResTimeStamp
-    // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
-
-    // fps
-    timeSincePrevFrame = timestamp - timestampPrev;
-    timestampPrev = timestamp;
-
-    // timer
-    if (!isPaused) timeElapsed += timeSincePrevFrame;
-
-    // player movement
-    const move = parseInputs();
-    const distance = (player.speed / 2) * timeSincePrevFrame;
-
-    // scroll world
-    if (elWorld && !isPaused) {
-      elWorld.scrollBy({ top: move.y * distance, left: move.x * distance });
-    }
-
-    window.requestAnimationFrame(gameLoop);
-  }
-
-  function spawnElLife(alive: Alive) {
-    const elEmoji = document.createElement("span");
-    elEmoji.classList.add("-ml-1");
-    elEmoji.classList.add("text-5xl");
-    elEmoji.textContent = alive.spriteEmoji;
-
-    const elName = document.createElement("span");
-    elName.classList.add("sr-only");
-    elName.textContent = alive.name;
-
-    const elSprite = document.createElement("div");
-    elSprite.classList.add("size-12");
-    elSprite.classList.add("bg-lime-500");
-
-    elSprite.appendChild(elEmoji);
-    elSprite.appendChild(elName);
-
-    const elAlive = document.createElement("div");
-    elAlive.classList.add("absolute");
-    elAlive.classList.add("max-w-full");
-    elAlive.classList.add("max-h-full");
-
-    elAlive.appendChild(elSprite);
-
-    return elAlive;
-  }
-
-  function spawnEnemyWaveCircle(el: HTMLDivElement, wave: Alive[]) {
-    // Roll for upgraded monster that drops treasure chest on defeat
-
-    const distance = 300;
-    const spread = 360 / wave.length;
-    // size-12 = 3rem = 48px
-    const spriteOffset = 24;
-
-    wave.forEach((enemy, i) => {
-      const elEnemy = spawnElLife(enemy);
-
-      // add to game
-      el.appendChild(elEnemy);
-
-      // calc x, y
-      const angle = spread * i;
-      const rads = angle * (Math.PI / 180);
-      const x = Math.round(Math.cos(rads) * distance);
-      const y = Math.round(Math.sin(rads) * distance);
-
-      const right = el.clientWidth;
-      const top = el.clientHeight;
-      console.log(i, angle, x, y, right, top);
-
-      elEnemy.style.left = `${el.clientWidth / 2 + x - spriteOffset}px`;
-      elEnemy.style.top = `${el.clientHeight / 2 + y + spriteOffset}px`;
-    });
-  }
-
-
-
-
-
 </script>
 
 <Controls bind:actionsActive />
