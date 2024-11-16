@@ -195,19 +195,21 @@
   }
 
   // Spawn each enemy in `wave`, and attach it to `el`.
-  function spawnEnemyWaveCircle(el: HTMLDivElement, wave: Alive[]): void {
+  function spawnEnemyWaveCircle(wave: Alive[]): void {
     // Roll for upgraded monster that drops treasure chest on defeat
 
     const distance = 300;
     const spread = 360 / wave.length;
     // size-12 = 3rem = 48px
-    const spriteOffset = 24;
+    // const spriteOffset = 24;
 
     wave.forEach((enemy, i) => {
+      // make sprite
       const elEnemy = generateDiv(enemy);
 
       // add to game
-      el.appendChild(elEnemy);
+      if (!elTerrain) return;
+      elTerrain.appendChild(elEnemy);
 
       // calc x, y
       const angle = spread * i;
@@ -215,12 +217,10 @@
       const x = Math.round(Math.cos(rads) * distance);
       const y = Math.round(Math.sin(rads) * distance);
 
-      const right = el.clientWidth;
-      const top = el.clientHeight;
-      console.log(i, angle, x, y, right, top);
-
-      elEnemy.style.left = `${el.clientWidth / 2 + x - spriteOffset}px`;
-      elEnemy.style.top = `${el.clientHeight / 2 + y + spriteOffset}px`;
+      // set x, y
+      if (!elWorld) return;
+      elEnemy.style.left = `${elWorld.scrollLeft + elWorld.clientWidth / 2 + x}px`;
+      elEnemy.style.top = `${elWorld.scrollTop + elWorld.clientHeight / 2 + y}px`;
     });
   }
 
@@ -247,6 +247,9 @@
     // fullscreen
     elGameWindow.requestFullscreen();
 
+    // load map
+    setTerrain(elTerrain, terrainForest);
+
     // spawn player
     const elPlayer = generateDiv(player);
     elPlayer.id = "player";
@@ -256,9 +259,6 @@
 
     // add to game
     elWorld.appendChild(elPlayer);
-
-    // load map
-    setTerrain(elTerrain, terrainForest);
 
     // scroll to center
     elWorld.scrollTo({
@@ -277,12 +277,8 @@
 <Controls bind:actionsActive />
 
 <div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
-  <div id="top-ui" class="z-50 flex max-h-max flex-row gap-2 bg-rose-950">
-    <img
-      src={terrainForest.imagePath}
-      alt="Minimap of {terrainForest.name} area."
-      class="my-1 size-8"
-    />
+  <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1 align-middle">
+    <img src={terrainForest.imagePath} alt="Minimap of {terrainForest.name} area." class="size-8" />
 
     <time
       id="timer"
@@ -307,8 +303,7 @@
       onsubmit={(event) => {
         event.preventDefault();
 
-        if (!elTerrain) return;
-        spawnEnemyWaveCircle(elTerrain, enemyWave);
+        spawnEnemyWaveCircle(enemyWave);
       }}
     >
       <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
@@ -344,7 +339,7 @@
         class="mx-auto max-w-max"
       >
         <button
-          class="m-4 border-b-8 border-red-900 bg-rose-600 px-4 py-2 font-extrabold text-white shadow-md shadow-red-900"
+          class="m-4 border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900"
           >start game</button
         >
       </form>
@@ -392,8 +387,8 @@
     </div>
   {/if}
 
-  <div bind:this={elWorld} id="world" class="overflow-auto bg-purple-900">
-    <div bind:this={elTerrain} id="terrain">
+  <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
+    <div bind:this={elTerrain} id="terrain" class="relative mx-auto">
       <!-- enemies go here -->
     </div>
 
