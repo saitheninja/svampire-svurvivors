@@ -131,41 +131,6 @@
     el.style.backgroundRepeat = "no-repeat";
   }
 
-  // Trigger game logic.
-  function gameLoop(timestamp: number) {
-    // timestamp: DOMHighResTimeStamp
-    // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
-
-    // fps
-    timeSincePrevFrame = timestamp - timestampPrev;
-    timestampPrev = timestamp;
-
-    // timer
-    if (!isPaused) timeElapsed += timeSincePrevFrame;
-
-    // parse inputs
-    let moveX = 0;
-    let moveY = 0;
-
-    if (actionsActive.includes("left")) moveX = moveX - 1;
-    if (actionsActive.includes("right")) moveX = moveX + 1;
-    if (actionsActive.includes("down")) moveY = moveY + 1;
-    if (actionsActive.includes("up")) moveY = moveY - 1;
-
-    // player movement
-    const distance = (player.speed / 2) * timeSincePrevFrame;
-
-    // scroll world
-    if (elWorld && !isPaused) {
-      elWorld.scrollBy({
-        top: moveY * distance,
-        left: moveX * distance,
-      });
-    }
-
-    window.requestAnimationFrame(gameLoop);
-  }
-
   // Generate div for `alive`.
   function generateDiv(alive: Alive): HTMLDivElement {
     const elEmoji = document.createElement("span");
@@ -178,7 +143,7 @@
     elName.textContent = alive.name;
 
     const elSprite = document.createElement("div");
-    elSprite.classList.add(alive.colorClass);
+    // elSprite.classList.add(alive.colorClass);
     elSprite.classList.add("size-12");
 
     elSprite.appendChild(elEmoji);
@@ -227,6 +192,22 @@
 
 
 
+  // Check if div bounding boxes overlap.
+  function isCollidingCheck(div1: Element, div2: Element): boolean {
+    let d1Rect = div1.getBoundingClientRect();
+    let d2Rect = div2.getBoundingClientRect();
+
+    const isNotCollidingBottom = d1Rect.bottom < d2Rect.top; // bottom1 higher than top2  1--' ,--2
+    const isNotCollidingTop = d2Rect.bottom < d1Rect.top; // bottom2 higher than top1     2--' ,--1
+    const isNotCollidingRight = d1Rect.right < d2Rect.left; // 1__| |__2
+    const isNotCollidingLeft = d2Rect.right < d1Rect.left; //  2__| |__1
+
+    const notColliding =
+      isNotCollidingBottom || isNotCollidingTop || isNotCollidingRight || isNotCollidingLeft;
+
+    return !notColliding;
+  }
+
   // Generate game state.
   // Attached to UI button.
   function startGame(): void {
@@ -243,6 +224,9 @@
       console.error(`No element with id "terrain".`);
       return;
     }
+
+    // close info window
+    isInfoShown = false;
 
     // fullscreen
     elGameWindow.requestFullscreen();
@@ -266,10 +250,60 @@
       left: (elWorld.scrollWidth - elWorld.clientWidth) / 2,
     });
 
-    // close info window
-    isInfoShown = false;
+    // spawn enemies
+    spawnEnemyWaveCircle(enemyWave);
 
     // start game loop
+    window.requestAnimationFrame(gameLoop);
+  }
+
+  // Trigger game logic.
+  function gameLoop(timestamp: number) {
+    // timestamp: DOMHighResTimeStamp
+    // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
+
+    // fps
+    timeSincePrevFrame = timestamp - timestampPrev;
+    timestampPrev = timestamp;
+
+    // timer
+    if (!isPaused) timeElapsed += timeSincePrevFrame;
+
+    // parse inputs
+    let moveX = 0;
+    let moveY = 0;
+
+    if (actionsActive.includes("left")) moveX = moveX - 1;
+    if (actionsActive.includes("right")) moveX = moveX + 1;
+    if (actionsActive.includes("down")) moveY = moveY + 1;
+    if (actionsActive.includes("up")) moveY = moveY - 1;
+
+    // player movement
+    const distance = (player.speed / 2) * timeSincePrevFrame;
+
+    // scroll world
+    if (elWorld && !isPaused) {
+      elWorld.scrollBy({
+        top: moveY * distance,
+        left: moveX * distance,
+      });
+    }
+
+    // check collisions
+    const elPlayer = document.getElementById("player");
+    if (!elPlayer) return;
+    if (!elTerrain) return;
+
+    for (const child of elTerrain.children) {
+      const isColliding = isCollidingCheck(elPlayer, child);
+
+      if (isColliding) {
+        child.classList.add("bg-red-300");
+      } else {
+        child.classList.remove("bg-red-300");
+      }
+    }
+
     window.requestAnimationFrame(gameLoop);
   }
 </script>
