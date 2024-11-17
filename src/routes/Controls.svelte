@@ -23,6 +23,10 @@
       actionName: "right",
       keyBindings: ["d", "ArrowRight"],
     },
+    {
+      actionName: "pause",
+      keyBindings: ["p"],
+    },
   ];
   const showBindings = false;
 
@@ -51,9 +55,7 @@
         event.preventDefault();
 
         if (!actionsActive.includes(actionName)) return;
-
-        const removed = actionsActive.filter((action) => action !== actionName);
-        actionsActive = removed;
+        actionsActive = actionsActive.filter((action) => action !== actionName);
       }
     }
   }

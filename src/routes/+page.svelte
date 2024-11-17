@@ -150,6 +150,7 @@
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
   let isInfoShown = $state(true);
+  let isPauseHeld = false;
   let isPaused = $state(false);
   let enemiesActive: Alive[] = $state([]);
 
@@ -266,6 +267,24 @@
   }
 
   /*
+  Parse user inputs.
+  */
+  function parseInputs(actionsActive: string[]): { moveX: number; moveY: number; pause: boolean } {
+    let moveX = 0;
+    let moveY = 0;
+
+    if (actionsActive.includes("left")) moveX = moveX - 1;
+    if (actionsActive.includes("right")) moveX = moveX + 1;
+    if (actionsActive.includes("down")) moveY = moveY + 1;
+    if (actionsActive.includes("up")) moveY = moveY - 1;
+
+    let pause = false;
+    if (actionsActive.includes("pause")) pause = true;
+
+    return { moveX, moveY, pause };
+  }
+
+  /*
   Trigger game logic.
   */
   function gameLoop(timestamp: number) {
@@ -276,23 +295,24 @@
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
 
+    const { moveX, moveY, pause } = parseInputs(actionsActive);
+
+    // pause/unpause
+    // if pause button released
+    if (isPauseHeld === true && pause === false) isPaused = !isPaused;
+    isPauseHeld = pause;
+
+    // if `isPaused` skip game calcs & go to new frame
+    if (isPaused) {
+      window.requestAnimationFrame(gameLoop);
+      return;
+    }
+
     // timer
-    if (!isPaused) timeElapsed += timeSincePrevFrame;
-
-    // parse inputs
-    let moveX = 0;
-    let moveY = 0;
-
-    if (actionsActive.includes("left")) moveX = moveX - 1;
-    if (actionsActive.includes("right")) moveX = moveX + 1;
-    if (actionsActive.includes("down")) moveY = moveY + 1;
-    if (actionsActive.includes("up")) moveY = moveY - 1;
+    timeElapsed += timeSincePrevFrame;
 
     // player movement
     const distancePlayer = (player.speed / 2) * timeSincePrevFrame;
-
-    // pause player movement, enemy movement
-    if (isPaused) return;
 
     // scroll world
     if (!elWorld) return;
