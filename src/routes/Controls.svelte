@@ -4,7 +4,13 @@
     keyBindings: string[];
   }
 
-  let { actionsActive = $bindable([]) }: { actionsActive: string[] } = $props();
+  let {
+    actionsActive = $bindable([]),
+    isPaused = $bindable(false),
+  }: {
+    actionsActive: string[];
+    isPaused: boolean;
+  } = $props();
 
   const controlKeys: GameAction[] = [
     {
@@ -56,6 +62,9 @@
 
         if (!actionsActive.includes(actionName)) return;
         actionsActive = actionsActive.filter((action) => action !== actionName);
+
+        // pause on key up
+        if (actionName === "pause") isPaused = !isPaused;
       }
     }
   }

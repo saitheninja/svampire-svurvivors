@@ -150,8 +150,6 @@
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
   let isInfoShown = $state(true);
-  let isPauseHeld = false;
-  let isPaused = $state(false);
   let enemiesActive: Alive[] = $state([]);
 
   // fps
@@ -166,6 +164,7 @@
 
   // controls
   let actionsActive: string[] = $state([]);
+  let isPaused = $state(false);
 
   /*
   Attach `terrain` as backgroundImage for `el`.
@@ -269,7 +268,7 @@
   /*
   Parse user inputs.
   */
-  function parseInputs(actionsActive: string[]): { moveX: number; moveY: number; pause: boolean } {
+  function parseInputs(actionsActive: string[]): { moveX: number; moveY: number } {
     let moveX = 0;
     let moveY = 0;
 
@@ -278,10 +277,7 @@
     if (actionsActive.includes("down")) moveY = moveY + 1;
     if (actionsActive.includes("up")) moveY = moveY - 1;
 
-    let pause = false;
-    if (actionsActive.includes("pause")) pause = true;
-
-    return { moveX, moveY, pause };
+    return { moveX, moveY };
   }
 
   /*
@@ -295,12 +291,7 @@
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
 
-    const { moveX, moveY, pause } = parseInputs(actionsActive);
-
-    // pause/unpause
-    // if pause button released
-    if (isPauseHeld === true && pause === false) isPaused = !isPaused;
-    isPauseHeld = pause;
+    const { moveX, moveY } = parseInputs(actionsActive);
 
     // if `isPaused` skip game calcs & go to new frame
     if (isPaused) {
@@ -439,7 +430,7 @@
   }
 </script>
 
-<Controls bind:actionsActive />
+<Controls bind:actionsActive bind:isPaused />
 
 <div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
   <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1 align-middle">
