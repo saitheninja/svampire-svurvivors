@@ -39,16 +39,19 @@
 
   interface Alive {
     name: string;
-    colorClass: string;
+    colorBg: string;
+    colorHit: string;
     health: number;
     spriteEmoji: string;
     speed: number;
     weapons: Weapon[];
+    el?: HTMLDivElement;
   }
 
   const player: Alive = {
     name: "player",
-    colorClass: "bg-blue-900",
+    colorBg: "bg-blue-900",
+    colorHit: "bg-blue-300",
     health: 100,
     spriteEmoji: "🧔🏾",
     speed: 1,
@@ -57,32 +60,34 @@
 
   const enemySkeleton: Alive = {
     name: "skeleton",
-    colorClass: "bg-lime-500",
+    colorBg: "bg-lime-500",
+    colorHit: "big-lime-300",
     health: 1,
     spriteEmoji: "💀",
-    speed: 2,
+    speed: 1,
     weapons: [],
   };
   const enemyZombie: Alive = {
     name: "zombie",
-    colorClass: "bg-lime-500",
+    colorBg: "bg-lime-500",
+    colorHit: "big-lime-300",
     health: 4,
     spriteEmoji: "🧟",
-    speed: 5,
+    speed: 2,
     weapons: [],
   };
   const enemyGoblin: Alive = {
     name: "goblin",
-    colorClass: "bg-red-500",
+    colorBg: "bg-red-500",
+    colorHit: "big-red-300",
     health: 10,
     spriteEmoji: "👺",
-    speed: 1,
+    speed: 0.5,
     weapons: [],
   };
   // Witch
   // Dog
   // Dragonfly
-  // Enemy pathfinding? Move towards middle?
 
   const enemyWave: Alive[] = [
     enemySkeleton,
@@ -105,6 +110,7 @@
   let elTerrain: HTMLDivElement | undefined = $state();
   let isInfoShown = $state(true);
   let isPaused = $state(false);
+  let enemiesActive: Alive[] = $state([]);
 
   // fps
   let timestampPrev = $state(0);
@@ -143,7 +149,7 @@
     elName.textContent = alive.name;
 
     const elSprite = document.createElement("div");
-    // elSprite.classList.add(alive.colorClass);
+    // elSprite.classList.add(alive.colorBg);
     elSprite.classList.add("size-12");
 
     elSprite.appendChild(elEmoji);
@@ -169,12 +175,10 @@
     // const spriteOffset = 24;
 
     wave.forEach((enemy, i) => {
-      // make sprite
-      const elEnemy = generateDiv(enemy);
+      let newEnemy = structuredClone(enemy);
 
-      // add to game
-      if (!elTerrain) return;
-      elTerrain.appendChild(elEnemy);
+      // make el
+      newEnemy.el = generateDiv(newEnemy);
 
       // calc x, y
       const angle = spread * i;
@@ -184,12 +188,18 @@
 
       // set x, y
       if (!elWorld) return;
-      elEnemy.style.left = `${elWorld.scrollLeft + elWorld.clientWidth / 2 + x}px`;
-      elEnemy.style.top = `${elWorld.scrollTop + elWorld.clientHeight / 2 + y}px`;
+      newEnemy.el.style.left = `${elWorld.scrollLeft + elWorld.clientWidth / 2 + x}px`;
+      newEnemy.el.style.top = `${elWorld.scrollTop + elWorld.clientHeight / 2 + y}px`;
+      newEnemy.el.id = `${i}`;
+
+      // add to world
+      if (!elTerrain) return;
+      elTerrain.appendChild(newEnemy.el);
+
+      // add to list of enemies
+      enemiesActive.push(newEnemy);
     });
   }
-
-
 
 
   // Check if div bounding boxes overlap.
@@ -237,9 +247,10 @@
     // spawn player
     const elPlayer = generateDiv(player);
     elPlayer.id = "player";
-    const spriteOffset = 24;
-    elPlayer.style.left = `${elWorld.clientWidth / 2 - spriteOffset}px`;
-    elPlayer.style.top = `${elWorld.clientHeight / 2 + spriteOffset}px`;
+    player.el = elPlayer;
+    const spriteSize = 48; // px
+    elPlayer.style.left = `${elWorld.clientWidth / 2 - spriteSize / 2}px`;
+    elPlayer.style.top = `${elWorld.clientHeight / 2 + spriteSize / 2}px`;
 
     // add to game
     elWorld.appendChild(elPlayer);
@@ -279,31 +290,82 @@
     if (actionsActive.includes("up")) moveY = moveY - 1;
 
     // player movement
-    const distance = (player.speed / 2) * timeSincePrevFrame;
+    const distancePlayer = (player.speed / 2) * timeSincePrevFrame;
+
+    // pause player movement, enemy movement
+    if (isPaused) return;
 
     // scroll world
-    if (elWorld && !isPaused) {
-      elWorld.scrollBy({
-        top: moveY * distance,
-        left: moveX * distance,
-      });
-    }
+    if (!elWorld) return;
+    elWorld.scrollBy({
+      top: moveY * distancePlayer,
+      left: moveX * distancePlayer,
+    });
 
-    // check collisions
-    const elPlayer = document.getElementById("player");
-    if (!elPlayer) return;
-    if (!elTerrain) return;
+    // enemy movement
+    const playerX = elWorld.scrollLeft + elWorld.clientWidth / 2;
+    const playerY = elWorld.scrollTop + elWorld.clientHeight / 2;
 
-    for (const child of elTerrain.children) {
-      const isColliding = isCollidingCheck(elPlayer, child);
+    enemiesActive.forEach(({ el, speed }) => {
+      if (!el) return;
+      let left = parseFloat(el.style.left);
+      let top = parseFloat(el.style.top);
 
-      if (isColliding) {
-        child.classList.add("bg-red-300");
+      const distance = (speed / 20) * timeSincePrevFrame;
+
+      const difX = left - playerX;
+      const difY = top - playerY;
+
+      if (Math.abs(difX) > distance) {
+        if (difX > 0) {
+          left = left - distance;
+        } else {
+          left = left + distance;
+        }
       } else {
-        child.classList.remove("bg-red-300");
+        left = playerX;
       }
-    }
+      if (Math.abs(difY) > distance) {
+        if (difY > 0) {
+          top = top - distance;
+        } else {
+          top = top + distance;
+        }
+      } else {
+        top = playerY;
+      }
 
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    });
+
+    // check collisions with player
+    enemiesActive.forEach((enemy) => {
+      if (!player.el) return;
+      if (!enemy.el) return;
+      const isColliding = isCollidingCheck(player.el, enemy.el);
+      // console.log(enemy.health);
+
+      if (!isColliding) {
+        enemy.el.classList.add(enemy.colorBg);
+        enemy.el.classList.remove(enemy.colorHit);
+      } else {
+        enemy.el.classList.add(enemy.colorHit);
+        enemy.el.classList.remove(enemy.colorBg);
+        enemy.health = enemy.health - 1;
+      }
+    });
+
+    // check enemy health, remove if dead
+    enemiesActive.forEach((enemy) => {
+      if (!enemy.el) return;
+      if (enemy.health > 0) return;
+      enemy.el.remove();
+    });
+
+    enemiesActive = enemiesActive.filter((enemy) => enemy.health > 0);
+
+    // new frame
     window.requestAnimationFrame(gameLoop);
   }
 </script>
@@ -328,10 +390,16 @@
 
     <span class="text-cyan-500">scrollX: {elWorld ? elWorld.scrollLeft : "no"}</span>
     <span class="text-cyan-500">scrollY: {elWorld ? elWorld.scrollTop : "no"}</span>
-    <!-- <span class="text-cyan-500">width: {elWorld?.clientWidth ?? "no"}</span> -->
-    <!-- <span class="text-cyan-500">height: {elWorld?.clientHeight ?? "no"}</span> -->
+    <span class="text-cyan-500">width: {elWorld ? elWorld.clientWidth : "no"}</span>
+    <span class="text-cyan-500">height: {elWorld ? elWorld.clientHeight : "no"}</span>
 
     <span class="text-cyan-500">actions: {actionsActive}</span>
+    <span class="text-lime-500"
+      >enemies: {enemiesActive.length}
+      {#each enemiesActive as { spriteEmoji }}
+        <span>{spriteEmoji}</span>
+      {/each}
+    </span>
 
     <form
       onsubmit={(event) => {
