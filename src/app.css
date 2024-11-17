@@ -10,6 +10,12 @@
   }
 }
 
+@layer base {
+  a {
+    @apply underline;
+  }
+}
+
 /* scroll bar */
 /* https://developer.chrome.com/docs/css-ui/scrollbar-styling */
 @layer utilities {
