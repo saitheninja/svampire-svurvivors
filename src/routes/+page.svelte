@@ -16,6 +16,7 @@
   };
 
   interface Sprite {
+    name: string;
     colorBg: string;
     colorHit: string;
     emoji: string;
@@ -36,12 +37,13 @@
     damage: 2,
     spawnInterval: 1000,
     sprite: {
+      name: "whip",
       colorBg: "rgb(30 58 138)", // bg-blue-900
       colorHit: "rgb(147 197 253)", // bg-blue-300
-      emoji: "🔗",
-      fontSize: 48,
-      width: 48 * 2,
-      height: 48,
+      emoji: "🔗🔗🔗🔗",
+      fontSize: 24,
+      width: 24 * 5,
+      height: 24,
     },
   };
   const sword: Weapon = {
@@ -49,11 +51,12 @@
     damage: 4,
     spawnInterval: 500,
     sprite: {
+      name: "sword",
       colorBg: "rgb(30 58 138)", // bg-blue-900
       colorHit: "rgb(147 197 253)", // bg-blue-300
       emoji: "🗡️",
       fontSize: 48,
-      width: 48 * 2,
+      width: 48,
       height: 48,
     },
   };
@@ -73,8 +76,9 @@
     name: "player",
     health: 100,
     speed: 1,
-    weapons: weaponsAll,
+    weapons: [],
     sprite: {
+      name: "player",
       colorBg: "rgb(30 58 138)", // bg-blue-900
       colorHit: "rgb(147 197 253)", // bg-blue-300
       emoji: "🧔🏾",
@@ -90,6 +94,7 @@
     speed: 1,
     weapons: [],
     sprite: {
+      name: "skeleton",
       colorBg: "rgb(132 204 22)", // bg-lime-500
       colorHit: "rgb(190 242 100)", // bg-lime-300
       emoji: "💀",
@@ -104,6 +109,7 @@
     speed: 2,
     weapons: [],
     sprite: {
+      name: "zombie",
       colorBg: "rgb(132 204 22)", // bg-lime-500
       colorHit: "rgb(190 242 100)", // bg-lime-300
       emoji: "🧟",
@@ -118,6 +124,7 @@
     speed: 0.5,
     weapons: [],
     sprite: {
+      name: "goblin",
       colorBg: "rgb(239 68 68)", // bg-red-500
       colorHit: "rgb(252 165 165)", // big-red-300
       emoji: "👺",
@@ -183,26 +190,29 @@
   }
 
   /*
-  Generate div for `alive`.
+  Generate div for given sprite .
   */
-  function generateDiv(alive: Alive): HTMLDivElement {
+  function generateDiv(sprite: Sprite): HTMLDivElement {
     const elEmoji = document.createElement("span");
-    elEmoji.textContent = alive.sprite.emoji;
-    elEmoji.style.fontSize = `${alive.sprite.fontSize}px`;
-    elEmoji.style.marginLeft = `${-5}px`;
-    // elEmoji.style.marginTop = `${-80}px`;
-    // elEmoji.style.marginBottom = `${alive.sprite.height}px`;
+    elEmoji.textContent = sprite.emoji;
+    elEmoji.style.fontSize = `${sprite.fontSize}px`;
 
     const elName = document.createElement("span");
-    elName.textContent = alive.name;
+    elName.textContent = sprite.name;
     elName.classList.add("sr-only");
 
     const elDiv = document.createElement("div");
-    elDiv.style.width = `${alive.sprite.width}px`;
-    elDiv.style.height = `${alive.sprite.height}px`;
     elDiv.style.position = "absolute";
+    elDiv.style.width = `${sprite.width}px`;
+    elDiv.style.height = `${sprite.height}px`;
+    elDiv.style.backgroundColor = sprite.colorBg;
     elDiv.style.overflow = "clip";
-    elDiv.style.backgroundColor = alive.sprite.colorBg;
+
+    //  center emoji in div
+    elEmoji.style.marginLeft = `${-sprite.fontSize / 10}px`;
+    elEmoji.style.marginTop = `${-sprite.fontSize / 4}px`;
+    elDiv.style.display = "flex";
+    elDiv.style.flexDirection = "row";
 
     elDiv.appendChild(elEmoji);
     elDiv.appendChild(elName);
@@ -218,14 +228,12 @@
 
     const distance = 300;
     const spread = 360 / wave.length;
-    // size-12 = 3rem = 48px
-    // const spriteOffset = 24;
 
     wave.forEach((enemy, i) => {
       let newEnemy = structuredClone(enemy);
 
       // make el
-      newEnemy.el = generateDiv(newEnemy);
+      newEnemy.el = generateDiv(newEnemy.sprite);
 
       // calc x, y
       const angle = spread * i;
@@ -391,22 +399,21 @@
     // load map
     setTerrain(elTerrain, terrainForest);
 
-    // spawn player
-    const elPlayer = generateDiv(player);
-    elPlayer.id = "player";
-    player.el = elPlayer;
-    const spriteSize = 48; // px
-    elPlayer.style.left = `${elWorld.clientWidth / 2 - spriteSize / 2}px`;
-    elPlayer.style.top = `${elWorld.clientHeight / 2 + spriteSize / 2}px`;
-
-    // add to game
-    elWorld.appendChild(elPlayer);
 
     // scroll to center
     elWorld.scrollTo({
       top: (elWorld.scrollHeight - elWorld.clientHeight) / 2,
       left: (elWorld.scrollWidth - elWorld.clientWidth) / 2,
     });
+
+    // spawn player
+    player.el = generateDiv(player.sprite);
+    player.el.id = "player";
+    player.el.style.left = `${elWorld.clientWidth / 2 - player.sprite.width / 2}px`;
+    player.el.style.top = `${elWorld.clientHeight / 2 - player.sprite.height / 2}px`;
+
+    // add to game
+    elWorld.appendChild(player.el);
 
     // spawn enemies
     spawnEnemyWaveCircle(enemyWave);
