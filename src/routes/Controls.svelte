@@ -4,14 +4,6 @@
     keyBindings: string[];
   }
 
-  let {
-    actionsActive = $bindable([]),
-    isPaused = $bindable(false),
-  }: {
-    actionsActive: string[];
-    isPaused: boolean;
-  } = $props();
-
   const controlKeys: GameAction[] = [
     {
       actionName: "up",
@@ -36,36 +28,73 @@
   ];
   const showBindings = false;
 
+  let {
+    actionsActive = $bindable([]),
+    isPaused = $bindable(false),
+    dirX = $bindable(0),
+    dirY = $bindable(0),
+  }: {
+    actionsActive: string[];
+    isPaused: boolean;
+    dirX: number;
+    dirY: number;
+  } = $props();
+
+  /*
+  Parse actions to calc direction. Positive direction right, down.
+  */
+  let x = $derived.by(() => {
+    let dir = 0;
+
+    if (actionsActive.includes("left")) dir -= 1;
+    if (actionsActive.includes("right")) dir += 1;
+
+    return dir;
+  });
+
+  let y = $derived.by(() => {
+    let dir = 0;
+
+    if (actionsActive.includes("up")) dir -= 1;
+    if (actionsActive.includes("down")) dir += 1;
+
+    return dir;
+  });
+
+  $effect(() => {
+    dirX = x;
+    dirY = y;
+  });
+
   function onkeydown(event: KeyboardEvent) {
-    const key = event.key;
-    // console.log(key);
-
     for (const { actionName, keyBindings } of controlKeys) {
-      if (keyBindings.includes(key)) {
-        // console.log("down", actionName, key);
-        event.preventDefault();
+      // if key not bound in action, go to next
+      if (!keyBindings.includes(event.key)) continue;
 
-        if (actionsActive.includes(actionName)) return;
-        actionsActive.push(actionName);
-      }
+      event.preventDefault();
+
+      // already in `actionsActive`
+      if (actionsActive.includes(actionName)) return;
+
+      // add to `actionsActive`
+      actionsActive.push(actionName);
     }
   }
 
   function onkeyup(event: KeyboardEvent) {
-    const key = event.key;
-    // console.log(key);
-
     for (const { actionName, keyBindings } of controlKeys) {
-      if (keyBindings.includes(key)) {
-        // console.log("up", actionName, key);
-        event.preventDefault();
+      if (!keyBindings.includes(event.key)) continue;
 
-        if (!actionsActive.includes(actionName)) return;
-        actionsActive = actionsActive.filter((action) => action !== actionName);
+      event.preventDefault();
 
-        // pause on key up
-        if (actionName === "pause") isPaused = !isPaused;
-      }
+      // already removed from `actionsActive`
+      if (!actionsActive.includes(actionName)) return;
+
+      // remove from `actionsActive`
+      actionsActive = actionsActive.filter((action) => action !== actionName);
+
+      // `pause` triggered on key up
+      if (actionName === "pause") isPaused = !isPaused;
     }
   }
 </script>

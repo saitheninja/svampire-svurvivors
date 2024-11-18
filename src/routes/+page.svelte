@@ -165,6 +165,8 @@
   // controls
   let actionsActive: string[] = $state([]);
   let isPaused = $state(false);
+  let dirX = $state(0);
+  let dirY = $state(0);
 
   /*
   Attach `terrain` as backgroundImage for `el`.
@@ -235,7 +237,6 @@
       if (!elWorld) return;
       newEnemy.el.style.left = `${elWorld.scrollLeft + elWorld.clientWidth / 2 + x}px`;
       newEnemy.el.style.top = `${elWorld.scrollTop + elWorld.clientHeight / 2 + y}px`;
-      newEnemy.el.id = `${i}`;
 
       // add to world
       if (!elTerrain) return;
@@ -245,7 +246,6 @@
       enemiesActive.push(newEnemy);
     });
   }
-
 
   /*
   Check if div bounding boxes overlap.
@@ -266,21 +266,6 @@
   }
 
   /*
-  Parse user inputs.
-  */
-  function parseInputs(actionsActive: string[]): { moveX: number; moveY: number } {
-    let moveX = 0;
-    let moveY = 0;
-
-    if (actionsActive.includes("left")) moveX = moveX - 1;
-    if (actionsActive.includes("right")) moveX = moveX + 1;
-    if (actionsActive.includes("down")) moveY = moveY + 1;
-    if (actionsActive.includes("up")) moveY = moveY - 1;
-
-    return { moveX, moveY };
-  }
-
-  /*
   Trigger game logic.
   */
   function gameLoop(timestamp: number) {
@@ -290,8 +275,6 @@
     // fps
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
-
-    const { moveX, moveY } = parseInputs(actionsActive);
 
     // if `isPaused` skip game calcs & go to new frame
     if (isPaused) {
@@ -308,8 +291,8 @@
     // scroll world
     if (!elWorld) return;
     elWorld.scrollBy({
-      top: moveY * distancePlayer,
-      left: moveX * distancePlayer,
+      top: dirY * distancePlayer,
+      left: dirX * distancePlayer,
     });
 
     // enemy movement
@@ -354,7 +337,6 @@
       if (!player.el) return;
       if (!enemy.el) return;
       const isColliding = isCollidingCheck(player.el, enemy.el);
-      // console.log(enemy.health);
 
       if (!isColliding) {
         enemy.el.style.backgroundColor = enemy.sprite.colorBg;
@@ -364,13 +346,14 @@
       }
     });
 
-    // check enemy health, remove if dead
+    // check enemy health, remove el if dead
     enemiesActive.forEach((enemy) => {
       if (!enemy.el) return;
       if (enemy.health > 0) return;
       enemy.el.remove();
     });
 
+    // remove from `enemiesActive` if health 0 or below
     enemiesActive = enemiesActive.filter((enemy) => enemy.health > 0);
 
     // new frame
@@ -395,6 +378,9 @@
       console.error(`No element with id "terrain".`);
       return;
     }
+
+    // reset timer
+    timeElapsed = 0;
 
     // close info window
     isInfoShown = false;
@@ -430,7 +416,7 @@
   }
 </script>
 
-<Controls bind:actionsActive bind:isPaused />
+<Controls bind:actionsActive bind:isPaused bind:dirX bind:dirY />
 
 <div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
   <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1 align-middle">
@@ -456,6 +442,7 @@
     <span class="text-cyan-500">height: {elWorld ? elWorld.clientHeight : "no"}</span>
 
     <span class="text-cyan-500">actions: {actionsActive}</span>
+
     <span class="text-lime-500"
       >enemies: {enemiesActive.length}
       {#each enemiesActive as { sprite }}
