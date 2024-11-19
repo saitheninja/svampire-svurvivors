@@ -275,36 +275,41 @@
   }
 
   /*
-  Trigger game logic.
+  Update FPS and timer.
   */
-  function gameLoop(timestamp: number) {
-    // timestamp: DOMHighResTimeStamp
-    // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
-
+  function updateTimer(timestamp: number): void {
     // fps
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
 
-    // if `isPaused` skip game calcs & go to new frame
-    if (isPaused) {
-      window.requestAnimationFrame(gameLoop);
-      return;
-    }
+    if (isPaused) return;
 
     // timer
     timeElapsed += timeSincePrevFrame;
+  }
+
+  /*
+  Calc player movement and scroll world.
+  */
+  function movePlayer(): void {
+    if (!elWorld) return;
 
     // player movement
     const distancePlayer = (player.speed / 2) * timeSincePrevFrame;
 
     // scroll world
-    if (!elWorld) return;
     elWorld.scrollBy({
-      top: dirY * distancePlayer,
       left: dirX * distancePlayer,
+      top: dirY * distancePlayer,
     });
+  }
 
-    // enemy movement
+  /*
+  Enemies move towards player.
+  */
+  function moveEnemies(): void {
+    if (!elWorld) return;
+
     const playerX = elWorld.scrollLeft + elWorld.clientWidth / 2;
     const playerY = elWorld.scrollTop + elWorld.clientHeight / 2;
 
@@ -364,6 +369,20 @@
 
     // remove from `enemiesActive` if health 0 or below
     enemiesActive = enemiesActive.filter((enemy) => enemy.health > 0);
+  }
+
+  /*
+  Trigger game logic.
+  */
+  function gameLoop(timestamp: number) {
+    // timestamp: DOMHighResTimeStamp
+    // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
+    updateTimer(timestamp);
+
+    if (!isPaused) {
+      movePlayer();
+      moveEnemies();
+    }
 
     // new frame
     window.requestAnimationFrame(gameLoop);
