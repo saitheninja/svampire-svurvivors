@@ -205,8 +205,9 @@
     elDiv.style.position = "absolute";
     elDiv.style.width = `${sprite.width}px`;
     elDiv.style.height = `${sprite.height}px`;
-    elDiv.style.backgroundColor = sprite.colorBg;
     elDiv.style.overflow = "clip";
+    // bg color with alpha 50%
+    elDiv.style.backgroundColor = sprite.colorBg.replace(")", " / 0.5)");
 
     //  center emoji in div
     elEmoji.style.marginLeft = `${-sprite.fontSize / 10}px`;
@@ -347,9 +348,9 @@
       const isColliding = isCollidingCheck(player.el, enemy.el);
 
       if (!isColliding) {
-        enemy.el.style.backgroundColor = enemy.sprite.colorBg;
+        enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
       } else {
-        enemy.el.style.backgroundColor = enemy.sprite.colorHit;
+        enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
         enemy.health = enemy.health - 1;
       }
     });
