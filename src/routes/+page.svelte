@@ -173,6 +173,7 @@
   let elTerrain: HTMLDivElement | undefined = $state();
   let isInfoShown = $state(true);
   let activeEnemies: Alive[] = $state([]);
+  let activePlayer: Alive | undefined = $state();
   let activeWeapons: Weapon[] = $state([]);
   let spawnId = 0;
 
@@ -304,9 +305,10 @@
   */
   function movePlayer(): void {
     if (!elWorld) return;
+    if (!activePlayer) return;
 
     // player movement
-    const distancePlayer = (player.speed / 2) * timeSincePrevFrame;
+    const distancePlayer = (activePlayer.speed / 2) * timeSincePrevFrame;
 
     // scroll world
     elWorld.scrollBy({
@@ -401,6 +403,8 @@
   Add new weapons. Remove expired weapons.
   */
   function checkPlayerWeapons(): void {
+    if (!activePlayer) return;
+
     // remove elements of expired weapons
     activeWeapons.forEach((weapon) => {
       weapon.durationActiveElapsed += timeSincePrevFrame;
@@ -415,28 +419,29 @@
     );
 
     // add new weapons
-    player.weapons.forEach((weapon) => {
+    activePlayer.weapons.forEach((weapon) => {
       weapon.durationCooldownElapsed += timeSincePrevFrame;
 
-      // still on cooldown
+      // if still on cooldown
       if (weapon.durationCooldownElapsed < weapon.durationCooldown) return;
 
       // reset cooldown
       weapon.durationCooldownElapsed = 0;
 
       // make new weapon object
-      const newWeapon = structuredClone(weapon);
+      // structuredClone(weapon) causes error here
+      const newWeapon = JSON.parse(JSON.stringify(weapon));
       newWeapon.el = generateDiv(weapon.sprite);
 
       // add to active weapons
       activeWeapons.push(newWeapon);
 
       // set el location
-      if (!player.el) return;
-      const left = parseFloat(player.el.style.left);
-      const width = parseFloat(player.el.style.width);
-      const top = parseFloat(player.el.style.top);
-      const height = parseFloat(player.el.style.height);
+      if (!activePlayer?.el) return;
+      const left = parseFloat(activePlayer.el.style.left);
+      const width = parseFloat(activePlayer.el.style.width);
+      const top = parseFloat(activePlayer.el.style.top);
+      const height = parseFloat(activePlayer.el.style.height);
 
       newWeapon.el.style.left = `${left + width}px`;
       newWeapon.el.style.top = `${top + height}px`;
@@ -467,10 +472,31 @@
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
+      if (!activePlayer) return;
+      if (activePlayer.healthCurrent <= 0) return;
+      activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
     }
 
     // new frame
     window.requestAnimationFrame(gameLoop);
+  }
+
+  function spawnPlayer() {
+    if (!elWorld) return;
+
+    // make new copy of player
+    activePlayer = structuredClone(player);
+
+    // make player el
+    activePlayer.el = generateDiv(activePlayer.sprite);
+    activePlayer.el.id = "player";
+
+    // set el position
+    activePlayer.el.style.left = `${elWorld.clientWidth / 2 - activePlayer.sprite.width / 2}px`;
+    activePlayer.el.style.top = `${elWorld.clientHeight / 2 - activePlayer.sprite.height / 2}px`;
+
+    // add to game
+    elWorld.appendChild(activePlayer.el);
   }
 
   /*
@@ -514,14 +540,8 @@
       left: left,
     });
 
-    // spawn player
-    player.el = generateDiv(player.sprite);
-    player.el.id = "player";
-    player.el.style.left = `${elWorld.clientWidth / 2 - player.sprite.width / 2}px`;
-    player.el.style.top = `${elWorld.clientHeight / 2 - player.sprite.height / 2}px`;
-
-    // add to game
-    elWorld.appendChild(player.el);
+    // fresh player object
+    spawnPlayer();
 
     // spawn enemies
     spawnEnemyWaveCircle(enemyWave);
@@ -602,13 +622,13 @@
     </span>
 
     <div class="flex-row">
-      <span>{"❤️".repeat(player.healthCurrent)}</span>
-      <span>{"🖤".repeat(player.healthMax - player.healthCurrent)}</span>
+      {#if activePlayer}
+        <span>{"❤️".repeat(activePlayer.healthCurrent)}</span>
+        <span>{"🖤".repeat(activePlayer.healthMax - activePlayer.healthCurrent)}</span>
+        <span>{activePlayer.healthCurrent}/{activePlayer.healthMax}</span>
 
-      <!-- <span>💙</span> -->
-      <!-- {#key player.healthCurrent} -->
-      <!--   <span>{"X".repeat(player.healthCurrent)}</span> -->
-      <!-- {/key} -->
+        <!-- <span>💙</span> -->
+      {/if}
     </div>
   </div>
 
