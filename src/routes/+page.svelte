@@ -75,7 +75,8 @@
 
   interface Alive {
     name: string;
-    health: number;
+    healthCurrent: number;
+    healthMax: number;
     speed: number;
     weapons: Weapon[];
     sprite: Sprite;
@@ -84,7 +85,8 @@
 
   const player: Alive = {
     name: "player",
-    health: 100,
+    healthCurrent: 100,
+    healthMax: 100,
     speed: 1,
     weapons: [...weaponsAll],
     sprite: {
@@ -100,7 +102,8 @@
 
   const enemySkeleton: Alive = {
     name: "skeleton",
-    health: 1,
+    healthCurrent: 1,
+    healthMax: 1,
     speed: 1,
     weapons: [],
     sprite: {
@@ -115,7 +118,8 @@
   };
   const enemyZombie: Alive = {
     name: "zombie",
-    health: 4,
+    healthCurrent: 4,
+    healthMax: 4,
     speed: 2,
     weapons: [],
     sprite: {
@@ -130,7 +134,8 @@
   };
   const enemyGoblin: Alive = {
     name: "goblin",
-    health: 100,
+    healthCurrent: 100,
+    healthMax: 100,
     speed: 0.5,
     weapons: [],
     sprite: {
@@ -372,7 +377,7 @@
         isColliding = true;
 
         // take damage
-        enemy.health = enemy.health - weapon.damage;
+        enemy.healthCurrent = enemy.healthCurrent - weapon.damage;
       });
 
       if (!isColliding) {
@@ -384,12 +389,12 @@
 
     // check enemy health, remove el if dead
     activeEnemies.forEach((enemy) => {
-      if (enemy.health > 0) return;
+      if (enemy.healthCurrent > 0) return;
       enemy.el?.remove();
     });
 
     // remove from `enemiesActive` if health 0 or below
-    activeEnemies = activeEnemies.filter((enemy) => enemy.health > 0);
+    activeEnemies = activeEnemies.filter((enemy) => enemy.healthCurrent > 0);
   }
 
   /*
@@ -595,6 +600,16 @@
         <span>{sprite.emoji}</span>
       {/each}
     </span>
+
+    <div class="flex-row">
+      <span>{"❤️".repeat(player.healthCurrent)}</span>
+      <span>{"🖤".repeat(player.healthMax - player.healthCurrent)}</span>
+
+      <!-- <span>💙</span> -->
+      <!-- {#key player.healthCurrent} -->
+      <!--   <span>{"X".repeat(player.healthCurrent)}</span> -->
+      <!-- {/key} -->
+    </div>
   </div>
 
   <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
