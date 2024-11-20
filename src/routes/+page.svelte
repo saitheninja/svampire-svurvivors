@@ -354,15 +354,31 @@
 
     // check collisions with player
     activeEnemies.forEach((enemy) => {
-      if (!player.el) return;
       if (!enemy.el) return;
-      const isColliding = isCollidingCheck(player.el, enemy.el);
+
+      let isColliding = false;
+
+      activeWeapons.forEach((weapon) => {
+        if (!weapon.el) return;
+        if (!enemy.el) return;
+
+        // check collision
+        const isCollidingWeapon = isCollidingCheck(weapon.el, enemy.el);
+
+        // if anything collides
+        if (!isCollidingWeapon) return;
+
+        // change background
+        isColliding = true;
+
+        // take damage
+        enemy.health = enemy.health - weapon.damage;
+      });
 
       if (!isColliding) {
         enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
       } else {
         enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
-        enemy.health = enemy.health - 1;
       }
     });
 
