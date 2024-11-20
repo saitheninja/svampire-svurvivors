@@ -28,14 +28,21 @@
   interface Weapon {
     name: string;
     damage: number;
-    spawnInterval: number; // milliseconds
+    durationActive: number; // milliseconds
+    durationActiveElapsed: number;
+    durationCooldown: number;
+    durationCooldownElapsed: number;
     sprite: Sprite;
+    el?: HTMLDivElement;
   }
 
   const whip: Weapon = {
     name: "whip",
     damage: 2,
-    spawnInterval: 1000,
+    durationActive: 1000,
+    durationActiveElapsed: 0,
+    durationCooldown: 2000,
+    durationCooldownElapsed: 0,
     sprite: {
       name: "whip",
       colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -49,7 +56,10 @@
   const sword: Weapon = {
     name: "sword",
     damage: 4,
-    spawnInterval: 500,
+    durationActive: 2000,
+    durationActiveElapsed: 0,
+    durationCooldown: 5000,
+    durationCooldownElapsed: 0,
     sprite: {
       name: "sword",
       colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -76,7 +86,7 @@
     name: "player",
     health: 100,
     speed: 1,
-    weapons: [],
+    weapons: [...weaponsAll],
     sprite: {
       name: "player",
       colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -157,7 +167,9 @@
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
   let isInfoShown = $state(true);
-  let enemiesActive: Alive[] = $state([]);
+  let activeEnemies: Alive[] = $state([]);
+  let activeWeapons: Weapon[] = $state([]);
+  let spawnId = 0;
 
   // fps
   let timestampPrev = $state(0);
@@ -218,6 +230,10 @@
     elDiv.appendChild(elEmoji);
     elDiv.appendChild(elName);
 
+    spawnId += 1;
+    elDiv.id = `${spawnId}`;
+    // console.log(spawnId);
+
     return elDiv;
   }
 
@@ -248,11 +264,15 @@
       newEnemy.el.style.top = `${elWorld.scrollTop + elWorld.clientHeight / 2 + y}px`;
 
       // add to world
-      if (!elTerrain) return;
-      elTerrain.appendChild(newEnemy.el);
+      const elEnemies = document.getElementById("enemies");
+      if (!elEnemies) {
+        console.error(`No div with id "enemies".`);
+        return;
+      }
+      elEnemies.appendChild(newEnemy.el);
 
-      // add to list of enemies
-      enemiesActive.push(newEnemy);
+      // add to list of active enemies
+      activeEnemies.push(newEnemy);
     });
   }
 
@@ -272,20 +292,6 @@
       isNotCollidingBottom || isNotCollidingTop || isNotCollidingRight || isNotCollidingLeft;
 
     return !notColliding;
-  }
-
-  /*
-  Update FPS and timer.
-  */
-  function updateTimer(timestamp: number): void {
-    // fps
-    timeSincePrevFrame = timestamp - timestampPrev;
-    timestampPrev = timestamp;
-
-    if (isPaused) return;
-
-    // timer
-    timeElapsed += timeSincePrevFrame;
   }
 
   /*
@@ -313,7 +319,7 @@
     const playerX = elWorld.scrollLeft + elWorld.clientWidth / 2;
     const playerY = elWorld.scrollTop + elWorld.clientHeight / 2;
 
-    enemiesActive.forEach(({ el, speed }) => {
+    activeEnemies.forEach(({ el, speed }) => {
       if (!el) return;
       let left = parseFloat(el.style.left);
       let top = parseFloat(el.style.top);
@@ -347,7 +353,7 @@
     });
 
     // check collisions with player
-    enemiesActive.forEach((enemy) => {
+    activeEnemies.forEach((enemy) => {
       if (!player.el) return;
       if (!enemy.el) return;
       const isColliding = isCollidingCheck(player.el, enemy.el);
@@ -361,14 +367,67 @@
     });
 
     // check enemy health, remove el if dead
-    enemiesActive.forEach((enemy) => {
-      if (!enemy.el) return;
+    activeEnemies.forEach((enemy) => {
       if (enemy.health > 0) return;
-      enemy.el.remove();
+      enemy.el?.remove();
     });
 
     // remove from `enemiesActive` if health 0 or below
-    enemiesActive = enemiesActive.filter((enemy) => enemy.health > 0);
+    activeEnemies = activeEnemies.filter((enemy) => enemy.health > 0);
+  }
+
+  /*
+  Add new weapons. Remove expired weapons.
+  */
+  function checkPlayerWeapons(): void {
+    // remove elements of expired weapons
+    activeWeapons.forEach((weapon) => {
+      weapon.durationActiveElapsed += timeSincePrevFrame;
+
+      if (weapon.durationActiveElapsed < weapon.durationActive) return;
+      weapon.el?.remove();
+    });
+
+    // remove expired weapons from tracking list
+    activeWeapons = activeWeapons.filter(
+      (weapon) => weapon.durationActiveElapsed < weapon.durationActive,
+    );
+
+    // add new weapons
+    player.weapons.forEach((weapon) => {
+      weapon.durationCooldownElapsed += timeSincePrevFrame;
+
+      // still on cooldown
+      if (weapon.durationCooldownElapsed < weapon.durationCooldown) return;
+
+      // reset cooldown
+      weapon.durationCooldownElapsed = 0;
+
+      // make new weapon object
+      const newWeapon = structuredClone(weapon);
+      newWeapon.el = generateDiv(weapon.sprite);
+
+      // add to active weapons
+      activeWeapons.push(newWeapon);
+
+      // set el location
+      if (!player.el) return;
+      const left = parseFloat(player.el.style.left);
+      const width = parseFloat(player.el.style.width);
+      const top = parseFloat(player.el.style.top);
+      const height = parseFloat(player.el.style.height);
+
+      newWeapon.el.style.left = `${left + width}px`;
+      newWeapon.el.style.top = `${top + height}px`;
+
+      // add el to world
+      const elWeapons = document.getElementById("weapons");
+      if (!elWeapons) {
+        console.error(`No div with id "weapons".`);
+        return;
+      }
+      elWeapons.appendChild(newWeapon.el);
+    });
   }
 
   /*
@@ -377,10 +436,15 @@
   function gameLoop(timestamp: number) {
     // timestamp: DOMHighResTimeStamp
     // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
-    updateTimer(timestamp);
+
+    // fps
+    timeSincePrevFrame = timestamp - timestampPrev;
+    timestampPrev = timestamp;
 
     if (!isPaused) {
+      timeElapsed += timeSincePrevFrame;
       movePlayer();
+      checkPlayerWeapons();
       moveEnemies();
     }
 
@@ -419,11 +483,14 @@
     // load map
     setTerrain(elTerrain, terrainForest);
 
+    const top = (elWorld.scrollHeight - elWorld.clientHeight) / 2;
+    const left = (elWorld.scrollWidth - elWorld.clientWidth) / 2;
+    // console.log(top, left);
 
     // scroll to center
     elWorld.scrollTo({
-      top: (elWorld.scrollHeight - elWorld.clientHeight) / 2,
-      left: (elWorld.scrollWidth - elWorld.clientWidth) / 2,
+      top: top,
+      left: left,
     });
 
     // spawn player
@@ -451,41 +518,6 @@
 
     <img src={terrainForest.imagePath} alt="Minimap of {terrainForest.name} area." class="size-8" />
 
-    <time
-      id="timer"
-      datetime="PT{timerMinutes}M{timerSeconds}S"
-      class="flex flex-row gap-0 text-blue-500"
-    >
-      <span>{timerMinutes.toString().length === 1 ? "0" : ""}{timerMinutes}</span>
-      <span>:</span>
-      <span>{timerSeconds.toString().length === 1 ? "0" : ""}{timerSeconds}</span>
-    </time>
-
-    <span class="text-blue-700">{fps} fps</span>
-
-    <span class="text-cyan-500">scrollX: {elWorld ? elWorld.scrollLeft : "no"}</span>
-    <span class="text-cyan-500">scrollY: {elWorld ? elWorld.scrollTop : "no"}</span>
-    <span class="text-cyan-500">width: {elWorld ? elWorld.clientWidth : "no"}</span>
-    <span class="text-cyan-500">height: {elWorld ? elWorld.clientHeight : "no"}</span>
-
-    <span class="text-cyan-500">actions: {actionsActive}</span>
-
-    <span class="text-lime-500"
-      >enemies: {enemiesActive.length}
-      {#each enemiesActive as { sprite }}
-        <span>{sprite.emoji}</span>
-      {/each}
-    </span>
-
-    <form
-      onsubmit={(event) => {
-        event.preventDefault();
-        spawnEnemyWaveCircle(enemyWave);
-      }}
-    >
-      <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
-    </form>
-
     <form
       onsubmit={(event) => {
         event.preventDefault();
@@ -500,6 +532,53 @@
         {/if}
       </button>
     </form>
+
+    <form
+      onsubmit={(event) => {
+        event.preventDefault();
+        spawnEnemyWaveCircle(enemyWave);
+      }}
+    >
+      <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
+    </form>
+
+    <time
+      id="timer"
+      datetime="PT{timerMinutes}M{timerSeconds}S"
+      class="flex flex-row gap-0 text-blue-500"
+    >
+      <span>{timerMinutes.toString().length === 1 ? "0" : ""}{timerMinutes}</span>
+      <span>:</span>
+      <span>{timerSeconds.toString().length === 1 ? "0" : ""}{timerSeconds}</span>
+    </time>
+
+    <span class="text-blue-700">{fps} fps</span>
+
+    <!-- <span class="text-cyan-500">scrollLeft: {elWorld?.scrollLeft}</span> -->
+    <!-- <span class="text-cyan-500">scrollWidth: {elWorld?.scrollWidth}</span> -->
+    <!-- <span class="text-cyan-500">clientWidth: {elWorld?.clientWidth}</span> -->
+    <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollWidth - elWorld.clientWidth : 0}</span> -->
+
+    <!-- <span class="text-cyan-500">scrollTop: {elWorld?.scrollTop}</span> -->
+    <!-- <span class="text-cyan-500">scrollHeight: {elWorld?.scrollHeight}</span> -->
+    <!-- <span class="text-cyan-500">clientHeight: {elWorld?.clientHeight}</span> -->
+    <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollHeight - elWorld.clientHeight : 0}</span> -->
+
+    <!-- <span class="text-cyan-500">actions: {actionsActive}</span> -->
+
+    <span class="text-blue-500"
+      >weapons: {activeWeapons.length}
+      {#each activeWeapons as { sprite }}
+        <span>{sprite.emoji}</span>
+      {/each}
+    </span>
+
+    <span class="text-lime-500"
+      >enemies: {activeEnemies.length}
+      {#each activeEnemies as { sprite }}
+        <span>{sprite.emoji}</span>
+      {/each}
+    </span>
   </div>
 
   <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
@@ -570,9 +649,10 @@
     {/if}
 
     <div bind:this={elTerrain} id="terrain" class="relative mx-auto">
-      <!-- enemies go here -->
+      <div class="absolute h-full w-full" id="enemies"></div>
     </div>
 
     <!-- player goes here -->
+    <div id="weapons"></div>
   </div>
 </div>
