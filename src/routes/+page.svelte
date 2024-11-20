@@ -621,13 +621,19 @@
       {/each}
     </span>
 
-    <div class="flex-row">
+    <div id="health-bar" class="max-w-max">
       {#if activePlayer}
-        <span>{"❤️".repeat(activePlayer.healthCurrent)}</span>
-        <span>{"🖤".repeat(activePlayer.healthMax - activePlayer.healthCurrent)}</span>
-        <span>{activePlayer.healthCurrent}/{activePlayer.healthMax}</span>
+        {@const healthPercent = (activePlayer.healthCurrent / activePlayer.healthMax) * 100}
 
-        <!-- <span>💙</span> -->
+        <div class="flex flex-row gap-2">
+          <span>health:</span>
+          <span>{Math.round(healthPercent)}%</span>
+          <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+        </div>
+
+        <div class="flex h-4 flex-row bg-gray-600">
+          <div class="bg-rose-500" style="width: {healthPercent}%"></div>
+        </div>
       {/if}
     </div>
   </div>
