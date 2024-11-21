@@ -102,7 +102,7 @@
 <svelte:window {onkeydown} {onkeyup} />
 
 {#if showBindings}
-  <div>
+  <div id="bindings">
     <p>Keybindings</p>
 
     <ul>

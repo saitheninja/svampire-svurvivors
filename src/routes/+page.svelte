@@ -34,7 +34,7 @@
   /*
   Attach `terrain` as backgroundImage for `el`.
   */
-  function setTerrain(el: HTMLElement, terrain: Terrain): void {
+  function setTerrain(el: HTMLDivElement, terrain: Terrain): void {
     // set dimensions
     el.style.width = `${terrain.width}px`;
     el.style.height = `${terrain.height}px`;
@@ -46,7 +46,7 @@
   }
 
   /*
-  Generate div for given sprite .
+  Generate div for given sprite.
   */
   function generateDiv(sprite: Sprite): HTMLDivElement {
     const elEmoji = document.createElement("span");
@@ -58,11 +58,16 @@
     elName.classList.add("sr-only");
 
     const elDiv = document.createElement("div");
+    elDiv.appendChild(elEmoji);
+    elDiv.appendChild(elName);
+
     elDiv.style.position = "absolute";
     elDiv.style.width = `${sprite.width}px`;
     elDiv.style.height = `${sprite.height}px`;
+
     elDiv.style.overflow = "clip";
-    // bg color with alpha 50%
+
+    // set bg color alpha to 50%
     elDiv.style.backgroundColor = sprite.colorBg.replace(")", " / 0.5)");
 
     //  center emoji in div
@@ -71,52 +76,49 @@
     elDiv.style.display = "flex";
     elDiv.style.flexDirection = "row";
 
-    elDiv.appendChild(elEmoji);
-    elDiv.appendChild(elName);
-
+    // track no. of spawns
     spawnId += 1;
     elDiv.id = `${spawnId}`;
-    // console.log(spawnId);
 
     return elDiv;
   }
 
   /*
   Spawn each enemy in `wave`, and attach it to `el`.
+  Uses element with id `enemies`.
   */
-  function spawnEnemyWaveCircle(wave: Alive[]): void {
+  function spawnEnemyWaveCircle(wave: Alive[], list: Alive[]): void {
     // Roll for upgraded monster that drops treasure chest on defeat
+
+    const elEnemies = document.getElementById("enemies");
+    if (!elEnemies) {
+      console.error(`No div with id "enemies".`);
+      return;
+    }
 
     const distance = 300;
     const spread = 360 / wave.length;
 
     wave.forEach((enemy, i) => {
+      // make new enemy
       let newEnemy = structuredClone(enemy);
-
-      // make el
       newEnemy.el = generateDiv(newEnemy.sprite);
 
-      // calc x, y
+      // calc x, y from angle in circle
       const angle = spread * i;
       const rads = angle * (Math.PI / 180);
       const x = Math.round(Math.cos(rads) * distance);
       const y = Math.round(Math.sin(rads) * distance);
 
       // set x, y
-      if (!elWorld) return;
-      newEnemy.el.style.left = `${elWorld.scrollLeft + elWorld.clientWidth / 2 + x}px`;
-      newEnemy.el.style.top = `${elWorld.scrollTop + elWorld.clientHeight / 2 + y}px`;
+      newEnemy.el.style.left = `${elEnemies.scrollLeft + elEnemies.clientWidth / 2 + x}px`;
+      newEnemy.el.style.top = `${elEnemies.scrollTop + elEnemies.clientHeight / 2 + y}px`;
 
       // add to world
-      const elEnemies = document.getElementById("enemies");
-      if (!elEnemies) {
-        console.error(`No div with id "enemies".`);
-        return;
-      }
       elEnemies.appendChild(newEnemy.el);
 
       // add to list of active enemies
-      activeEnemies.push(newEnemy);
+      list.push(newEnemy);
     });
   }
 
@@ -382,7 +384,7 @@
     spawnPlayer();
 
     // spawn enemies
-    spawnEnemyWaveCircle(enemyWave);
+    spawnEnemyWaveCircle(enemyWave, activeEnemies);
 
     // start game loop
     window.requestAnimationFrame(gameLoop);
@@ -415,7 +417,7 @@
     <form
       onsubmit={(event) => {
         event.preventDefault();
-        spawnEnemyWaveCircle(enemyWave);
+        spawnEnemyWaveCircle(enemyWave, activeEnemies);
       }}
     >
       <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
