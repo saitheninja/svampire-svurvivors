@@ -21,14 +21,16 @@
 
   let distanceX = $derived(pointerMoveX - pointerDownX);
   let distanceY = $derived(pointerMoveY - pointerDownY);
+
+  let angleJoystick = $derived(Math.atan2(distanceY, distanceX) * (180 / Math.PI));
   let distance = $derived(Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)));
   let distanceClamped = $derived(Math.min(distance, radiusJoystick));
-  let angleJoystick = $derived(Math.atan2(distanceY, distanceX) * (180 / Math.PI));
 
   $effect(() => {
     if (!isPointerDown) {
       joystickAngle = 0;
       joystickTiltRatio = 0;
+
       return;
     }
 
@@ -37,11 +39,11 @@
   });
 
   function onpointerdown(event: PointerEvent) {
-    // if (!event.target) return;
-    // const el = event.target as HTMLElement;
+    if (!event.target) return;
+    const el = event.target as HTMLElement;
 
-    // if not clicking in world div
-    // if (el.id !== "world") return;
+    // if not clicking in the div
+    if (el.id !== "joystick") return;
 
     isPointerDown = true;
 
@@ -53,11 +55,11 @@
   }
 
   function onpointermove(event: PointerEvent) {
-    // not dragging
+    // if not dragging
     if (isPointerDown === false) return;
 
-    pointerMoveX = event.offsetX;
-    pointerMoveY = event.offsetY;
+    pointerMoveX = event.x;
+    pointerMoveY = event.y;
   }
 
   function onpointerup() {
@@ -74,26 +76,21 @@
 <svelte:window {onpointerdown} {onpointermove} {onpointerup} />
 
 <!-- touch-none for pointermove touch events to not get hijacked -->
-<div id="joystick" class="absolute z-50 h-full w-full touch-none">
+<div id="joystick" class="absolute left-0 top-0 z-40 h-full w-full touch-none">
   <div
     id="joystick-base"
-    class="absolute rounded-full bg-teal-900/50"
+    class="absolute rounded-full bg-rose-950/50"
     class:hidden={!isPointerDown}
-    style="
-  top: {pointerDownY - radiusJoystick}px;
-  left: {pointerDownX - radiusJoystick}px;
-  width: {radiusJoystick * 2}px;
-  height: {radiusJoystick * 2}px;
-  transform: rotate({angleJoystick}deg);
-  "
+    style:left="{pointerDownX - radiusJoystick}px"
+    style:top="{pointerDownY - radiusJoystick}px"
+    style:width="{radiusJoystick * 2}px"
+    style:height="{radiusJoystick * 2}px"
+    style:transform="rotate({angleJoystick}deg)"
   >
     <div
       id="joystick-lever"
-      class="relative top-1/4 h-1/2 w-1/2 rounded-full bg-teal-500"
-      style="left: {radiusJoystick / 2 + distanceClamped}px;"
-    >
-      {distanceClamped}
-      {Math.round(angleJoystick)}
-    </div>
+      class="relative top-1/4 h-1/2 w-1/2 rounded-full bg-rose-500"
+      style:left="{radiusJoystick / 2 + distanceClamped}px"
+    ></div>
   </div>
 </div>

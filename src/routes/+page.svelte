@@ -10,11 +10,13 @@
   let elGameWindow: HTMLDivElement | undefined = $state();
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
-  let isInfoShown = $state(true);
+
+  let isStarted = $state(false);
+  let spawnId = 0;
+
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive | undefined = $state();
   let activeWeapons: Weapon[] = $state([]);
-  let spawnId = 0;
 
   // fps
   let timestampPrev = $state(0);
@@ -393,11 +395,12 @@
       return;
     }
 
-    // reset timer
-    timeElapsed = 0;
-
-    // close info window
-    isInfoShown = false;
+    // reset game state
+    activeEnemies = [];
+    activeWeapons = [];
+    isStarted = true; // hide info el, use joystick
+    isPaused = false;
+    timeElapsed = 0; // reset timer// reset timer
 
     // fullscreen
     elGameWindow.requestFullscreen();
@@ -415,7 +418,7 @@
       left: left,
     });
 
-    // fresh player object
+    // fresh player object after terrain load because of height, width
     spawnPlayer();
 
     // spawn enemies
@@ -429,7 +432,7 @@
 <ControlsKeys bind:actionsActive bind:isPaused bind:dirX bind:dirY />
 
 <div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
-  <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1 align-middle">
+  <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1">
     <h1 class="text-center text-xl font-extrabold">Svampire Svurvivors</h1>
 
     <img src={terrainForest.imagePath} alt="Minimap of {terrainForest.name} area." class="size-8" />
@@ -514,7 +517,7 @@
   </div>
 
   <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
-    {#if isInfoShown === true}
+    {#if !isStarted}
       <div id="info" class="mx-auto max-w-max">
         <form
           id="form-start-game"
@@ -545,7 +548,7 @@
           <div>
             <p>Links:</p>
 
-            <ul>
+            <ul class="list-disc">
               <li>
                 <a href="https://hack.sveltesociety.dev/2024/rules">SvelteHack Rules</a>
               </li>
@@ -584,17 +587,15 @@
           </div>
         </details>
       </div>
+    {:else if !isPaused}
+      <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
     {/if}
 
-    <div bind:this={elTerrain} id="terrain" class="relative mx-auto">
-      <div class="absolute h-full w-full" id="enemies"></div>
+    <div bind:this={elTerrain} id="terrain" class="relative">
+      <div id="enemies" class="absolute h-full w-full"></div>
     </div>
 
     <!-- player goes here -->
     <div id="weapons"></div>
   </div>
-
-  {#if !isPaused}
-    <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
-  {/if}
 </div>
