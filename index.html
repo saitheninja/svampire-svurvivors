@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="./favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		
+		<link href="./_app/immutable/assets/0.DExE4hKX.css" rel="stylesheet">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.cfEtcDis.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/entry.DNlGxuHB.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/runtime.COdoLDON.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.DCSkHyIG.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/store.Oc-QfHXc.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/disclose-version.DkZ32_cM.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/props.D-k2i8hj.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/0.Dvz0-ucK.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/2.DmcB2UlW.js">
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents"><!--[--><!--[--><!----><!----><!--[!--><!--]--><!----> <div id="game-window" class="flex h-screen flex-col bg-gray-900"><div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1"><h1 class="text-center text-xl font-extrabold">Svampire Svurvivors</h1> <img src="./terrain-forest.svg" alt="Minimap of forest area." class="size-8"> <form><button class="bg-rose-900 px-4 py-1 font-extrabold"><!--[-->pause<!--]--></button></form> <form><button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button></form> <time id="timer" datetime="PT0M0S" class="flex flex-row gap-0 text-blue-500"><span>00</span> <span>:</span> <span>00</span></time> <span class="text-blue-700">Infinity fps</span>     <span class="text-blue-500">weapons: 0 <!--[--><!--]--></span> <span class="text-lime-500">enemies: 0 <!--[--><!--]--></span> <div id="health-bar" class="max-w-max"><!--[!--><!--]--></div></div> <div id="world" class="flex-grow overflow-auto bg-purple-900"><!--[--><div id="info" class="mx-auto max-w-max"><form id="form-start-game" class="mx-auto mb-8 mt-12 max-w-max"><button class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900">start game</button></form> <details class="space-y-4"><summary><span>It's like <a href="https://store.steampowered.com/app/1794680/Vampire_Survivors/" class="underline">Vampire Survivors</a>, but built with Svelte, for the web.</span> <span>I am so funny haha.</span></summary> <div><p>Links:</p> <ul class="list-disc"><li><a href="https://hack.sveltesociety.dev/2024/rules">SvelteHack Rules</a></li> <li><a href="https://hack.sveltesociety.dev/2023/winners">SvelteHack Winnners 2013</a></li> <li>Previous winner, <a href="https://hack.sveltesociety.dev/2023/winners">Wolfenstein 3D</a></li> <li><a href="https://coherent-labs.com/blog/uitutorials/virtual-joystick/">Touch joystick tutorial</a></li></ul></div> <div><p>TODO:</p> <ul class="list-disc"><li>globals: health, score, timer, experience, gold</li> <li>touch controls</li> <li>boss monsters</li> <li>weapons</li> <li>map</li> <li>power ups</li> <li>arrows pointing to power ups</li> <li>map tiles editor</li></ul></div></details></div><!--]--> <div id="terrain" class="relative"><div id="enemies" class="absolute h-full w-full"></div></div> <div id="weapons"></div></div></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
+			
+			<script>
+				{
+					__sveltekit_w3m3ro = {
+						base: new URL(".", location).pathname.slice(0, -1),
+						assets: "/svampire-svurvivors"
+					};
+
+					const element = document.currentScript.parentElement;
+
+					const data = [null,null];
+
+					Promise.all([
+						import("./_app/immutable/entry/start.cfEtcDis.js"),
+						import("./_app/immutable/entry/app.DCSkHyIG.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element, {
+							node_ids: [0, 2],
+							data,
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>

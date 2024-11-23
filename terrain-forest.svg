@@ -1,0 +1,128 @@
+<svg
+  viewBox="0 0 4000 4000"
+  xmlns="http://www.w3.org/2000/svg"
+  >
+  <defs>
+    <pattern id="pattern-star-road" viewBox="0,0,10,10" width="5%" height="25%">
+      <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
+      </pattern>
+
+    <pattern id="pattern-star-dirt-path" viewBox="0,0,10,10" width="50%" height="5%">
+      <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
+      </pattern>
+
+    <radialGradient id="gradient">
+      <stop offset="10%" stop-color="gold" />
+      <stop offset="95%" stop-color="red" />
+      </radialGradient>
+
+
+    <!-- the performance of these suck -->
+    <filter id="filter-noise-fine">
+      <feTurbulence
+        result="noiseFine"
+        type="fractalNoise"
+        baseFrequency="0.6"
+        numOctaves="1"
+        seed="420"
+        stitchTiles="stitch"
+        />
+      </filter>
+
+    <filter id="filter-noise-coarse">
+      <feTurbulence
+        result="noiseCoarse"
+        type="fractalNoise"
+        baseFrequency="0.05"
+        numOctaves="8"
+        seed="400"
+        stitchTiles="noStitch"
+        />
+      </filter>
+    </defs>
+
+  <g id="grass">
+    <rect
+      id="grass-color"
+      width="100%"
+      height="100%"
+      fill="#008855"
+      />
+
+    <!-- <rect -->
+    <!--   id="grass-filter" -->
+    <!--   width="100%" -->
+    <!--   height="100%" -->
+    <!--   filter="url(#filter-noise-fine)" -->
+    <!--   style="mix-blend-mode: color" -->
+    <!--   /> -->
+    </g>
+
+  <g id="dirt-path">
+    <rect
+      id="dirt-path-color-1"
+      x="45%"
+      width="10%"
+      height="100%"
+      fill="#907010"
+      />
+
+    <rect
+      id="dirt-path-color-2"
+      x="45%"
+      width="10%"
+      height="100%"
+      fill="url(#pattern-star-dirt-path)"
+      opacity="1"
+      />
+
+
+    <!-- <rect -->
+    <!--   id="path-filter" -->
+    <!--   x="46%" -->
+    <!--   width="8%" -->
+    <!--   height="100%" -->
+    <!--   filter="url(#filter-noise-coarse)" -->
+    <!--   style="mix-blend-mode: saturation" -->
+    <!--   /> -->
+    </g>
+
+  <g id="road">
+    <rect
+      id="road-color-1"
+      y="45%"
+      width="100%"
+      height="10%"
+      fill="#808080"
+      />
+
+    <rect
+      id="road-color-2"
+      y="45%"
+      width="100%"
+      height="10%"
+      fill="url(#pattern-star-road)"
+      opacity="0.1"
+      />
+
+    <line
+      id="road-color-line"
+      x1="0%"
+      y1="50%"
+      x2="100%"
+      y2="50%"
+      stroke-width="10"
+      stroke="#F9F9F0"
+      />
+    </g>
+
+  <rect
+    id="world-light"
+    x="0"
+    y="0"
+    width="100%"
+    height="100%"
+    fill="url(#gradient)"
+    opacity="0.2"
+    />
+  </svg>
