@@ -1,5 +1,6 @@
 <script lang="ts">
   import Controls from "./Controls.svelte";
+  import ControlsJoystick from "./ControlsJoystick.svelte";
 
   import { enemyWave, player, terrainForest } from "$lib/definitions";
 
@@ -30,6 +31,8 @@
   let isPaused = $state(false);
   let dirX = $state(0);
   let dirY = $state(0);
+  let joystickAngle = $state(0); // rads
+  let joystickTiltRatio = $state(0); // 0 to 1
 
   /*
   Attach `terrain` as backgroundImage for `el`.
@@ -140,20 +143,49 @@
     return !notColliding;
   }
 
+  function roundTo3Places(n: number): number {
+    const n3 = n * 1_000;
+    const rounded = Math.round(n3);
+    const divided = rounded / 1_000;
+
+    return divided;
+  }
+
   /*
   Calc player movement and scroll world.
   */
   function movePlayer(): void {
     if (!elWorld) return;
     if (!activePlayer) return;
+    if (!dirX && !dirY && !joystickTiltRatio) return;
 
-    // player movement
-    const distancePlayer = (activePlayer.speed / 2) * timeSincePrevFrame;
+    const distanceMax = (activePlayer.speed / 2) * timeSincePrevFrame;
+
+    let distance = 0;
+    let angle = 0;
+
+    // keys
+    if (dirX || dirY) {
+      distance = distanceMax;
+      angle = Math.atan2(dirY, dirX);
+    }
+
+    // joystick overrides keys
+    if (joystickTiltRatio) {
+      distance = distanceMax * joystickTiltRatio;
+      angle = (joystickAngle * Math.PI) / 180;
+    }
+
+    const left = distance * Math.cos(angle);
+    const top = distance * Math.sin(angle);
+
+    const roundedLeft = roundTo3Places(left);
+    const roundedTop = roundTo3Places(top);
 
     // scroll world
     elWorld.scrollBy({
-      left: dirX * distancePlayer,
-      top: dirY * distancePlayer,
+      left: roundedLeft,
+      top: roundedTop,
     });
   }
 
@@ -524,6 +556,12 @@
                   >Wolfenstein 3D</a
                 >
               </li>
+
+              <li>
+                <a href="https://coherent-labs.com/blog/uitutorials/virtual-joystick/"
+                  >Touch joystick tutorial</a
+                >
+              </li>
             </ul>
           </div>
 
@@ -552,4 +590,8 @@
     <!-- player goes here -->
     <div id="weapons"></div>
   </div>
+
+  {#if !isPaused}
+    <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
+  {/if}
 </div>

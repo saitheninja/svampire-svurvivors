@@ -28,6 +28,11 @@
   ];
   const showBindings = false;
 
+  /*
+    Parse actions to calc direction.
+    Positive direction right, down.
+    Set bindable props to return data to parent.
+  */
   let {
     actionsActive = $bindable([]),
     isPaused = $bindable(false),
@@ -40,28 +45,16 @@
     dirY: number;
   } = $props();
 
-  /*
-  Parse actions to calc direction. Positive direction right, down.
-  */
-  let x = $derived.by(() => {
-    let dir = 0;
-
-    if (actionsActive.includes("left")) dir -= 1;
-    if (actionsActive.includes("right")) dir += 1;
-
-    return dir;
-  });
-
-  let y = $derived.by(() => {
-    let dir = 0;
-
-    if (actionsActive.includes("up")) dir -= 1;
-    if (actionsActive.includes("down")) dir += 1;
-
-    return dir;
-  });
-
   $effect(() => {
+    let x = 0;
+    let y = 0;
+
+    if (actionsActive.includes("left")) x -= 1;
+    if (actionsActive.includes("right")) x += 1;
+
+    if (actionsActive.includes("up")) y -= 1;
+    if (actionsActive.includes("down")) y += 1;
+
     dirX = x;
     dirY = y;
   });
