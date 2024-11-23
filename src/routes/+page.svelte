@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Controls from "./Controls.svelte";
+  import ControlsKeys from "./ControlsKeys.svelte";
   import ControlsJoystick from "./ControlsJoystick.svelte";
 
   import { enemyWave, player, terrainForest } from "$lib/definitions";
@@ -35,7 +35,7 @@
   let joystickTiltRatio = $state(0); // 0 to 1
 
   /*
-  Attach `terrain` as backgroundImage for `el`.
+    Attach `terrain` as backgroundImage for `el`.
   */
   function setTerrain(el: HTMLDivElement, terrain: Terrain): void {
     // set dimensions
@@ -49,7 +49,7 @@
   }
 
   /*
-  Generate div for given sprite.
+    Generate div for given sprite.
   */
   function generateDiv(sprite: Sprite): HTMLDivElement {
     const elEmoji = document.createElement("span");
@@ -87,8 +87,8 @@
   }
 
   /*
-  Spawn each enemy in `wave`, and attach it to `el`.
-  Uses element with id `enemies`.
+    Spawn each enemy in `wave`, and attach it to `el`.
+    Uses element with id `enemies`.
   */
   function spawnEnemyWaveCircle(wave: Alive[], list: Alive[]): void {
     // Roll for upgraded monster that drops treasure chest on defeat
@@ -126,7 +126,7 @@
   }
 
   /*
-  Check if div bounding boxes overlap.
+    Check if div bounding boxes overlap.
   */
   function isCollidingCheck(div1: Element, div2: Element): boolean {
     let d1Rect = div1.getBoundingClientRect();
@@ -152,7 +152,7 @@
   }
 
   /*
-  Calc player movement and scroll world.
+    Calc player movement and scroll world.
   */
   function movePlayer(): void {
     if (!elWorld) return;
@@ -190,7 +190,7 @@
   }
 
   /*
-  Enemies move towards player.
+    Enemies move towards player.
   */
   function moveEnemies(): void {
     if (!elWorld) return;
@@ -272,7 +272,7 @@
   }
 
   /*
-  Add new weapons. Remove expired weapons.
+    Add new weapons. Remove expired weapons.
   */
   function checkPlayerWeapons(): void {
     if (!activePlayer) return;
@@ -329,7 +329,7 @@
   }
 
   /*
-  Trigger game logic.
+    Trigger game logic.
   */
   function gameLoop(timestamp: number) {
     // timestamp: DOMHighResTimeStamp
@@ -353,6 +353,9 @@
     window.requestAnimationFrame(gameLoop);
   }
 
+  /*
+    Make new player object & el on start.
+  */
   function spawnPlayer() {
     if (!elWorld) return;
 
@@ -372,8 +375,8 @@
   }
 
   /*
-  Generate game state.
-  Attached to UI button.
+    Generate game state.
+    Attached to UI button.
   */
   function startGame(): void {
     // div doesn't exist yet
@@ -423,7 +426,7 @@
   }
 </script>
 
-<Controls bind:actionsActive bind:isPaused bind:dirX bind:dirY />
+<ControlsKeys bind:actionsActive bind:isPaused bind:dirX bind:dirY />
 
 <div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
   <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1 align-middle">
