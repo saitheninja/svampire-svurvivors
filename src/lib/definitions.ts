@@ -8,8 +8,8 @@ export interface Terrain {
 export const terrainForest: Terrain = {
   name: "forest",
   imagePath: "./terrain-forest.svg",
-  height: 4000,
-  width: 4000,
+  height: 8000,
+  width: 8000,
 };
 
 export interface Sprite {
