@@ -533,59 +533,16 @@
           >
         </form>
 
-        <details class="space-y-4">
-          <summary>
-            <span>
-              It's like <a
-                href="https://store.steampowered.com/app/1794680/Vampire_Survivors/"
-                class="underline">Vampire Survivors</a
-              >, but built with Svelte, for the web.
-            </span>
+        <div>
+          <p>TODO:</p>
 
-            <span>I am so funny haha.</span>
-          </summary>
-
-          <div>
-            <p>Links:</p>
-
-            <ul class="list-disc">
-              <li>
-                <a href="https://hack.sveltesociety.dev/2024/rules">SvelteHack Rules</a>
-              </li>
-
-              <li>
-                <a href="https://hack.sveltesociety.dev/2023/winners">SvelteHack Winnners 2013</a>
-              </li>
-
-              <li>
-                Previous winner, <a href="https://hack.sveltesociety.dev/2023/winners"
-                  >Wolfenstein 3D</a
-                >
-              </li>
-
-              <li>
-                <a href="https://coherent-labs.com/blog/uitutorials/virtual-joystick/"
-                  >Touch joystick tutorial</a
-                >
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <p>TODO:</p>
-
-            <ul class="list-disc">
-              <li>globals: health, score, timer, experience, gold</li>
-              <li>touch controls</li>
-              <li>boss monsters</li>
-              <li>weapons</li>
-              <li>map</li>
-              <li>power ups</li>
-              <li>arrows pointing to power ups</li>
-              <li>map tiles editor</li>
-            </ul>
-          </div>
-        </details>
+          <ul class="list-disc">
+            <li>globals: score, experience, gold</li>
+            <li>map</li>
+            <li>power ups</li>
+            <li>arrows pointing to power ups</li>
+          </ul>
+        </div>
       </div>
     {:else if !isPaused}
       <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />

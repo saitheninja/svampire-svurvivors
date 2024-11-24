@@ -1,38 +1,12 @@
-# sv
+# Svampire Svurvivors
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+It's like [Vampire Survivors](https://store.steampowered.com/app/1794680/Vampire_Survivors/), but built with Svelte, for the web.
 
-## Creating a project
+I am so funny haha.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Links
 
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- [SvelteHack Rules](https://hack.sveltesociety.dev/2024/rules)
+- [SvelteHack Winnners 2013](https://hack.sveltesociety.dev/2023/winners)
+- Previous winner, [Wolfenstein 3D](https://hack.sveltesociety.dev/2023/winners)
+- [Touch joystick tutorial](https://coherent-labs.com/blog/uitutorials/virtual-joystick/)
