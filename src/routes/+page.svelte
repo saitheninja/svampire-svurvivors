@@ -19,6 +19,7 @@
   let isStarted = $state(false);
   let isFinished = $state(false);
   let spawnId = $state(0);
+  let enemiesKilled = $state(0);
 
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive | undefined = $state();
@@ -273,6 +274,7 @@
     activeEnemies.forEach((enemy) => {
       if (enemy.healthCurrent > 0) return;
       enemy.el?.remove();
+      enemiesKilled += 1;
     });
 
     // remove from `enemiesActive` if health 0 or below
@@ -415,9 +417,12 @@
     // reset game state
     activeEnemies = [];
     activeWeapons = [];
+    isFinished = false;
     isStarted = true; // hide info el, use joystick
     isPaused = false;
     timeElapsed = 0; // reset timer// reset timer
+    enemiesKilled = 0;
+    spawnId = 0;
 
     // fullscreen
     elGameWindow.requestFullscreen();
@@ -504,7 +509,7 @@
 
       <div class="flex flex-col gap-1 justify-self-end text-end">
         <span>{0} 🪙</span>
-        <span>{spawnId} 💀</span>
+        <span>{enemiesKilled} 💀</span>
         <span class="text-blue-700">{fps} fps</span>
 
         <img
