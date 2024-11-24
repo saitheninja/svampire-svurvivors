@@ -7,6 +7,9 @@
   import type { Alive, Sprite, Terrain, Weapon } from "$lib/definitions";
 
   const durationGameEnd = 30 * 60 * 1000; // minute * seconds * milliseconds
+  // when filled, treasure chests won't offer that type
+  const slotsWeapons = 6;
+  const slotsAccessories = 6;
 
   // current game state
   let elGameWindow: HTMLDivElement | undefined = $state();
@@ -15,7 +18,7 @@
 
   let isStarted = $state(false);
   let isFinished = $state(false);
-  let spawnId = 0;
+  let spawnId = $state(0);
 
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive | undefined = $state();
@@ -446,93 +449,142 @@
 <ControlsKeys bind:actionsActive bind:isPaused bind:dirX bind:dirY />
 
 <div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
-  <div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1">
-    <h1 class="text-center text-xl font-extrabold">Svampire Svurvivors</h1>
+  <div id="top-ui" class="absolute left-0 top-0 z-50 w-full p-1">
+    <div id="experience-bar" class="mb-2 rounded-lg border-2 border-blue-100 bg-gray-900 px-2 py-1">
+      <h1 class="text-xl font-extrabold">Svampire Svurvivors</h1>
 
-    <img src={terrainForest.imagePath} alt="Minimap of {terrainForest.name} area." class="size-8" />
+      <!-- {#if activePlayer} -->
+      <!--   {@const experiencePercent = -->
+      <!--     (activePlayer.experienceCurrent / activePlayer.experienceNextLevel) * 100} -->
+      <!---->
+      <!--   <div class="sr-only flex flex-row gap-2"> -->
+      <!--     <span>experience:</span> -->
+      <!--     <span>{Math.round(experiencePercent)}%</span> -->
+      <!--     <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span> -->
+      <!--   </div> -->
+      <!---->
+      <!--   <div class="flex h-4 flex-row bg-gray-600"> -->
+      <!--     <div class="bg-blue-500" style="width: {experiencePercent}%"></div> -->
+      <!---->
+      <!--     <span class="ml-auto max-w-max">{activePlayer.level}</span> -->
+      <!--   </div> -->
+      <!-- {/if} -->
+    </div>
 
-    <form
-      onsubmit={(event) => {
-        event.preventDefault();
-        isPaused = !isPaused;
-      }}
-    >
-      <button class="bg-rose-900 px-4 py-1 font-extrabold">
-        {#if !isPaused}
-          pause
-        {:else}
-          unpause
-        {/if}
-      </button>
-    </form>
-
-    <form
-      onsubmit={(event) => {
-        event.preventDefault();
-        spawnEnemyWaveCircle(enemyWave, activeEnemies);
-      }}
-    >
-      <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
-    </form>
-
-    <time
-      id="timer"
-      datetime="PT{timerMinutes}M{timerSeconds}S"
-      class="flex flex-row gap-0 text-blue-500"
-    >
-      <span>{timerMinutes.toString().length === 1 ? "0" : ""}{timerMinutes}</span>
-      <span>:</span>
-      <span>{timerSeconds.toString().length === 1 ? "0" : ""}{timerSeconds}</span>
-    </time>
-
-    <span class="text-blue-700">{fps} fps</span>
-
-    <!-- <span class="text-cyan-500">scrollLeft: {elWorld?.scrollLeft}</span> -->
-    <!-- <span class="text-cyan-500">scrollWidth: {elWorld?.scrollWidth}</span> -->
-    <!-- <span class="text-cyan-500">clientWidth: {elWorld?.clientWidth}</span> -->
-    <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollWidth - elWorld.clientWidth : 0}</span> -->
-
-    <!-- <span class="text-cyan-500">scrollTop: {elWorld?.scrollTop}</span> -->
-    <!-- <span class="text-cyan-500">scrollHeight: {elWorld?.scrollHeight}</span> -->
-    <!-- <span class="text-cyan-500">clientHeight: {elWorld?.clientHeight}</span> -->
-    <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollHeight - elWorld.clientHeight : 0}</span> -->
-
-    <!-- <span class="text-cyan-500">actions: {actionsActive}</span> -->
-
-    <span class="text-blue-500"
-      >weapons: {activeWeapons.length}
-      {#each activeWeapons as { sprite }}
-        <span>{sprite.emoji}</span>
-      {/each}
-    </span>
-
-    <span class="text-lime-500"
-      >enemies: {activeEnemies.length}
-      {#each activeEnemies as { sprite }}
-        <span>{sprite.emoji}</span>
-      {/each}
-    </span>
-
-    <div id="health-bar" class="max-w-max">
-      {#if activePlayer}
-        {@const healthPercent = (activePlayer.healthCurrent / activePlayer.healthMax) * 100}
-
-        <div class="flex flex-row gap-2">
-          <span>health:</span>
-          <span>{Math.round(healthPercent)}%</span>
-          <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+    <div class="grid grid-cols-3 grid-rows-1">
+      <div class="flex flex-col gap-1 justify-self-start text-center">
+        <div class="flex flex-row gap-1">
+          {#each player.weapons as { sprite }}
+            <span class="w-6 overflow-clip border-2 border-white/30">{sprite.emoji}</span>
+          {/each}
         </div>
 
-        <div class="flex h-4 flex-row bg-gray-600">
-          <div class="bg-rose-500" style="width: {healthPercent}%"></div>
+        <div class="flex flex-row gap-1">
+          {#each Array(slotsWeapons) as slot, i}
+            <span class="w-6 border-2 border-white/30">{slot}{i}</span>
+          {/each}
         </div>
-      {/if}
+
+        <div class="flex flex-row gap-1">
+          {#each Array(slotsAccessories) as slot, i}
+            <span class="w-6 border-2 border-dotted border-white/30">{slot}{i}</span>
+          {/each}
+        </div>
+      </div>
+
+      <time
+        id="timer"
+        datetime="PT{timerMinutes}M{timerSeconds}S"
+        class="flex flex-row gap-0 justify-self-center text-lg font-extrabold text-white"
+      >
+        <span>{timerMinutes.toString().length === 1 ? "0" : ""}{timerMinutes}</span>
+        <span>:</span>
+        <span>{timerSeconds.toString().length === 1 ? "0" : ""}{timerSeconds}</span>
+      </time>
+
+      <div class="flex flex-col gap-1 justify-self-end text-end">
+        <span>{0} 🪙</span>
+        <span>{spawnId} 💀</span>
+        <span class="text-blue-700">{fps} fps</span>
+
+        <img
+          src={terrainForest.imagePath}
+          alt="Minimap of {terrainForest.name} area."
+          class="size-8"
+        />
+
+        <form
+          onsubmit={(event) => {
+            event.preventDefault();
+            isPaused = !isPaused;
+          }}
+        >
+          <button class="bg-rose-900 px-4 py-1 font-extrabold">
+            {#if !isPaused}
+              pause
+            {:else}
+              unpause
+            {/if}
+          </button>
+        </form>
+
+        <form
+          onsubmit={(event) => {
+            event.preventDefault();
+            spawnEnemyWaveCircle(enemyWave, activeEnemies);
+          }}
+        >
+          <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
+        </form>
+
+        <!-- <span class="text-cyan-500">scrollLeft: {elWorld?.scrollLeft}</span> -->
+        <!-- <span class="text-cyan-500">scrollWidth: {elWorld?.scrollWidth}</span> -->
+        <!-- <span class="text-cyan-500">clientWidth: {elWorld?.clientWidth}</span> -->
+        <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollWidth - elWorld.clientWidth : 0}</span> -->
+
+        <!-- <span class="text-cyan-500">scrollTop: {elWorld?.scrollTop}</span> -->
+        <!-- <span class="text-cyan-500">scrollHeight: {elWorld?.scrollHeight}</span> -->
+        <!-- <span class="text-cyan-500">clientHeight: {elWorld?.clientHeight}</span> -->
+        <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollHeight - elWorld.clientHeight : 0}</span> -->
+
+        <!-- <span class="text-cyan-500">actions: {actionsActive}</span> -->
+
+        <!-- <span class="text-blue-500" -->
+        <!--   >weapons: {activeWeapons.length} -->
+        <!--   {#each activeWeapons as { sprite }} -->
+        <!--     <span>{sprite.emoji}</span> -->
+        <!--   {/each} -->
+        <!-- </span> -->
+
+        <!-- <span class="text-lime-500" -->
+        <!--   >enemies: {activeEnemies.length} -->
+        <!--   {#each activeEnemies as { sprite }} -->
+        <!--     <span>{sprite.emoji}</span> -->
+        <!--   {/each} -->
+        <!-- </span> -->
+
+        <div id="health-bar" class="max-w-max">
+          {#if activePlayer}
+            {@const healthPercent = (activePlayer.healthCurrent / activePlayer.healthMax) * 100}
+
+            <div class="sr-only flex flex-row gap-2">
+              <span>health:</span>
+              <span>{Math.round(healthPercent)}%</span>
+              <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+            </div>
+
+            <div class="flex h-4 flex-row bg-gray-600">
+              <div class="bg-rose-500" style="width: {healthPercent}%"></div>
+            </div>
+          {/if}
+        </div>
+      </div>
     </div>
   </div>
 
   <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
     {#if !isStarted || isFinished}
-      <div id="info" class="mx-auto max-w-max">
+      <div id="info" class="mx-auto mt-80 max-w-max">
         <form
           id="form-start-game"
           onsubmit={(event) => {
