@@ -6,12 +6,15 @@
 
   import type { Alive, Sprite, Terrain, Weapon } from "$lib/definitions";
 
+  const durationGameEnd = 30 * 60 * 1000; // minute * seconds * milliseconds
+
   // current game state
   let elGameWindow: HTMLDivElement | undefined = $state();
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
 
   let isStarted = $state(false);
+  let isFinished = $state(false);
   let spawnId = 0;
 
   let activeEnemies: Alive[] = $state([]);
@@ -330,6 +333,16 @@
     });
   }
 
+  function checkGameOver(): boolean {
+    let isOver = false;
+
+    if (timeElapsed > durationGameEnd) isOver = true;
+    if (activePlayer && activePlayer.healthCurrent <= 0) isOver = true;
+    // activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
+
+    return isOver;
+  }
+
   /*
     Trigger game logic.
   */
@@ -341,14 +354,15 @@
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
 
+    // game over
+    isFinished = checkGameOver();
+    if (isFinished) return;
+
     if (!isPaused) {
       timeElapsed += timeSincePrevFrame;
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
-      // if (!activePlayer) return;
-      // if (activePlayer?.healthCurrent <= 0) return;
-      // activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
     }
 
     // new frame
@@ -517,7 +531,7 @@
   </div>
 
   <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
-    {#if !isStarted}
+    {#if !isStarted || isFinished}
       <div id="info" class="mx-auto max-w-max">
         <form
           id="form-start-game"
