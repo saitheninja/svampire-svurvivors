@@ -512,12 +512,6 @@
         <span>{enemiesKilled} 💀</span>
         <span class="text-blue-700">{fps} fps</span>
 
-        <img
-          src={terrainForest.imagePath}
-          alt="Minimap of {terrainForest.name} area."
-          class="size-8"
-        />
-
         <form
           onsubmit={(event) => {
             event.preventDefault();
@@ -585,6 +579,18 @@
         </div>
       </div>
     </div>
+
+    {#if isPaused}
+      <div id="menu" class="mx-auto max-w-max bg-gray-900/70 p-2">
+        <h2 class="mb-2 text-lg font-bold">Map</h2>
+
+        <img
+          src={terrainForest.imagePath}
+          alt="Minimap of {terrainForest.name} area."
+          class="w-full"
+        />
+      </div>
+    {/if}
   </div>
 
   <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
