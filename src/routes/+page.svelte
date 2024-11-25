@@ -15,15 +15,21 @@
   let elGameWindow: HTMLDivElement | undefined = $state();
   let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
+  let elPlayer: HTMLDivElement | undefined = $state();
 
   let isStarted = $state(false);
   let isFinished = $state(false);
-  let spawnId = $state(0);
+  // let spawnId = $state(0);
   let enemiesKilled = $state(0);
 
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive | undefined = $state();
   let activeWeapons: Weapon[] = $state([]);
+  let healthPercent = $state(100);
+  $effect(() => {
+    if (!activePlayer) return;
+    healthPercent = Math.round((activePlayer.healthCurrent / activePlayer.healthMax) * 100);
+  });
 
   // fps
   let timestampPrev = $state(0);
@@ -77,7 +83,7 @@
     elDiv.style.width = `${sprite.width}px`;
     elDiv.style.height = `${sprite.height}px`;
 
-    elDiv.style.overflow = "clip";
+    // elDiv.style.overflow = "clip";
 
     // set bg color alpha to 50%
     elDiv.style.backgroundColor = sprite.colorBg.replace(")", " / 0.5)");
@@ -89,8 +95,8 @@
     elDiv.style.flexDirection = "row";
 
     // track no. of spawns
-    spawnId += 1;
-    elDiv.id = `${spawnId}`;
+    // spawnId += 1;
+    // elDiv.id = `${spawnId}`;
 
     return elDiv;
   }
@@ -425,20 +431,26 @@
   */
   function spawnPlayer() {
     if (!elWorld) return;
+    if (!elPlayer) return;
 
-    // make new copy of player
+    // make fresh copy of player data
     activePlayer = structuredClone(player);
 
     // make player el
-    activePlayer.el = generateDiv(activePlayer.sprite);
-    activePlayer.el.id = "player";
-
-    // set el position
-    activePlayer.el.style.left = `${elWorld.clientWidth / 2 - activePlayer.sprite.width / 2}px`;
-    activePlayer.el.style.top = `${elWorld.clientHeight / 2 - activePlayer.sprite.height / 2}px`;
+    // activePlayer.el = generateDiv(activePlayer.sprite);
+    // activePlayer.el.id = "player";
+    let el = generateDiv(activePlayer.sprite);
+    elPlayer.insertBefore(el, elPlayer.firstElementChild);
 
     // add to game
-    elWorld.appendChild(activePlayer.el);
+    activePlayer.el = elPlayer;
+
+    // set el position
+    // activePlayer.el.style.left = `${elWorld.clientWidth / 2 - activePlayer.sprite.width / 2}px`;
+    // activePlayer.el.style.top = `${elWorld.clientHeight / 2 - activePlayer.sprite.height / 2}px`;
+
+    // add to game
+    // elWorld.appendChild(activePlayer.el);
   }
 
   /*
@@ -468,7 +480,7 @@
     isPaused = false;
     timeElapsed = 0; // reset timer// reset timer
     enemiesKilled = 0;
-    spawnId = 0;
+    // spawnId = 0;
 
     // fullscreen
     elGameWindow.requestFullscreen();
@@ -607,22 +619,6 @@
         <!--     <span>{sprite.emoji}</span> -->
         <!--   {/each} -->
         <!-- </span> -->
-
-        <div id="health-bar" class="w-full">
-          {#if activePlayer}
-            {@const healthPercent = (activePlayer.healthCurrent / activePlayer.healthMax) * 100}
-
-            <div class="sr-only flex flex-row gap-2">
-              <span>health:</span>
-              <span>{Math.round(healthPercent)}%</span>
-              <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
-            </div>
-
-            <div class="flex h-4 flex-row bg-gray-600">
-              <div class="bg-rose-500" style="width: {healthPercent}%"></div>
-            </div>
-          {/if}
-        </div>
       </div>
     </div>
 
@@ -675,7 +671,50 @@
       <div id="enemies" class="absolute h-full w-full"></div>
     </div>
 
-    <!-- player goes here -->
+    <div
+      bind:this={elPlayer}
+      id="player"
+      class="absolute"
+      style:left="{(elWorld?.clientWidth ?? 1000) / 2 - (activePlayer?.sprite.width ?? 48) / 2}px"
+      style:top="{(elWorld?.clientHeight ?? 1000) / 2 - (activePlayer?.sprite.height ?? 48) / 2}px"
+      style:width="{(activePlayer?.sprite.width ?? 48) / 2}px"
+      style:height="{(activePlayer?.sprite.height ?? 48) / 2}px"
+    >
+      <div
+        id="health-bar"
+        class="relative mt-2"
+        style:top="{activePlayer?.sprite.height ??
+          48 + Math.round((activePlayer?.sprite.height ?? 48) / 1)}px"
+        style:width="{activePlayer?.sprite.width ?? 48}px"
+      >
+        {#if activePlayer}
+          <div class="sr-only flex flex-row gap-2">
+            <span>health:</span>
+            <span>{healthPercent}%</span>
+            <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+          </div>
+
+          <div class="flex h-2 flex-row bg-gray-900">
+            <div class="bg-rose-500" style="width: {healthPercent}%"></div>
+          </div>
+        {/if}
+      </div>
+    </div>
+
     <div id="weapons"></div>
+
+    <!-- <div -->
+    <!--   id="center-world" -->
+    <!--   class="absolute h-4 w-4 bg-red-400" -->
+    <!--   style:left="{(elWorld?.clientWidth ?? 1000) / 2}px" -->
+    <!--   style:top="{(elWorld?.clientHeight ?? 1000) / 2}px" -->
+    <!-- ></div> -->
   </div>
+
+  <!-- <div -->
+  <!--   id="center-window" -->
+  <!--   class="absolute h-4 w-4 bg-lime-400" -->
+  <!--   style:left="{(elGameWindow?.clientWidth ?? 1000) / 2}px" -->
+  <!--   style:top="{(elGameWindow?.clientHeight ?? 1000) / 2}px" -->
+  <!-- ></div> -->
 </div>
