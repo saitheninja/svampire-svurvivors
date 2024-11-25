@@ -152,6 +152,9 @@
     return !notColliding;
   }
 
+  /*
+    Custom rounding.
+  */
   function roundTo3Places(n: number): number {
     const n3 = n * 1_000;
     const rounded = Math.round(n3);
@@ -239,12 +242,17 @@
       el.style.left = `${left}px`;
       el.style.top = `${top}px`;
     });
+  }
 
-    // check collisions with player
+  /*
+    Check enemies overlap with player weapons.
+  */
+  function checkEnemiesHit(): void {
+    // check if enemy hit by player weapons
     activeEnemies.forEach((enemy) => {
       if (!enemy.el) return;
 
-      let isColliding = false;
+      let isEnemyHit = false;
 
       activeWeapons.forEach((weapon) => {
         if (!weapon.el) return;
@@ -253,17 +261,18 @@
         // check collision
         const isCollidingWeapon = isCollidingCheck(weapon.el, enemy.el);
 
-        // if anything collides
+        // if no weapons hit
         if (!isCollidingWeapon) return;
 
         // change background
-        isColliding = true;
+        isEnemyHit = true;
 
         // take damage
         enemy.healthCurrent = enemy.healthCurrent - weapon.damage;
       });
 
-      if (!isColliding) {
+      // change enemy bg
+      if (!isEnemyHit) {
         enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
       } else {
         enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
@@ -279,6 +288,41 @@
 
     // remove from `enemiesActive` if health 0 or below
     activeEnemies = activeEnemies.filter((enemy) => enemy.healthCurrent > 0);
+  }
+
+  /*
+    Check player overlaps with enemies.
+  */
+  function checkPlayerHit(): void {
+    // check if player hit by enemy
+    if (!activePlayer) return;
+    if (!activePlayer.el) return;
+    let isPlayerHit = false;
+
+    activeEnemies.forEach((enemy) => {
+      if (!activePlayer) return;
+      if (!activePlayer.el) return;
+      if (!enemy.el) return;
+
+      // check collision
+      const isCollidingPlayer = isCollidingCheck(enemy.el, activePlayer.el);
+
+      // if no enemies hit player
+      if (!isCollidingPlayer) return;
+
+      // change background
+      isPlayerHit = true;
+
+      // take damage
+      activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
+    });
+
+    // change player bg
+    if (!isPlayerHit) {
+      activePlayer.el.style.backgroundColor = player.sprite.colorBg.replace(")", " / 0.5)");
+    } else {
+      activePlayer.el.style.backgroundColor = player.sprite.colorHit.replace(")", " / 0.5)");
+    }
   }
 
   /*
@@ -338,14 +382,14 @@
     });
   }
 
+  /*
+    Check timer, player health.
+  */
   function checkGameOver(): boolean {
-    let isOver = false;
+    if (timeElapsed > durationGameEnd) return true;
+    if (activePlayer && activePlayer.healthCurrent <= 0) return true;
 
-    if (timeElapsed > durationGameEnd) isOver = true;
-    if (activePlayer && activePlayer.healthCurrent <= 0) isOver = true;
-    // activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
-
-    return isOver;
+    return false;
   }
 
   /*
@@ -368,6 +412,8 @@
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
+      checkEnemiesHit();
+      checkPlayerHit();
     }
 
     // new frame
@@ -562,7 +608,7 @@
         <!--   {/each} -->
         <!-- </span> -->
 
-        <div id="health-bar" class="max-w-max">
+        <div id="health-bar" class="w-full">
           {#if activePlayer}
             {@const healthPercent = (activePlayer.healthCurrent / activePlayer.healthMax) * 100}
 
