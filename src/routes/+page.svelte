@@ -19,11 +19,11 @@
 
   let isStarted = $state(false);
   let isFinished = $state(false);
-  // let spawnId = $state(0);
+  let spawnId = 0;
   let enemiesKilled = $state(0);
 
   let activeEnemies: Alive[] = $state([]);
-  let activePlayer: Alive | undefined = $state();
+  let activePlayer: Alive = $state(structuredClone(player));
   let activeWeapons: Weapon[] = $state([]);
   let healthPercent = $state(100);
   $effect(() => {
@@ -68,14 +68,20 @@
   */
   function generateDiv(sprite: Sprite): HTMLDivElement {
     const elEmoji = document.createElement("span");
+    elEmoji.id = `emoji-${spawnId}`;
+
     elEmoji.textContent = sprite.emoji;
     elEmoji.style.fontSize = `${sprite.fontSize}px`;
 
     const elName = document.createElement("span");
+    elName.id = `name-${spawnId}`;
+
     elName.textContent = sprite.name;
     elName.classList.add("sr-only");
 
     const elDiv = document.createElement("div");
+    elDiv.id = `sprite-${spawnId}`;
+
     elDiv.appendChild(elEmoji);
     elDiv.appendChild(elName);
 
@@ -83,7 +89,7 @@
     elDiv.style.width = `${sprite.width}px`;
     elDiv.style.height = `${sprite.height}px`;
 
-    // elDiv.style.overflow = "clip";
+    elDiv.style.overflow = "clip";
 
     // set bg color alpha to 50%
     elDiv.style.backgroundColor = sprite.colorBg.replace(")", " / 0.5)");
@@ -95,8 +101,7 @@
     elDiv.style.flexDirection = "row";
 
     // track no. of spawns
-    // spawnId += 1;
-    // elDiv.id = `${spawnId}`;
+    spawnId += 1;
 
     return elDiv;
   }
@@ -300,23 +305,25 @@
     Check player overlaps with enemies.
   */
   function checkPlayerHit(): void {
-    // check if player hit by enemy
-    if (!activePlayer) return;
-    if (!activePlayer.el) return;
     let isPlayerHit = false;
 
     activeEnemies.forEach((enemy) => {
-      if (!activePlayer) return;
-      if (!activePlayer.el) return;
-      if (!enemy.el) return;
+      if (!enemy.el) {
+        console.error("No enemy el.");
+        return;
+      }
+      if (!activePlayer.el) {
+        console.error("No activePlayer el.");
+        return;
+      }
 
-      // check collision
+      // check if player hit by enemy
       const isCollidingPlayer = isCollidingCheck(enemy.el, activePlayer.el);
 
       // if no enemies hit player
       if (!isCollidingPlayer) return;
 
-      // change background
+      // if hit, change background
       isPlayerHit = true;
 
       // take damage
@@ -324,6 +331,10 @@
     });
 
     // change player bg
+    if (!activePlayer.el) {
+      console.error("No activePlayer el.");
+      return;
+    }
     if (!isPlayerHit) {
       activePlayer.el.style.backgroundColor = player.sprite.colorBg.replace(")", " / 0.5)");
     } else {
@@ -427,30 +438,30 @@
   }
 
   /*
-    Make new player object & el on start.
+    Make new player object & sprite el on start.
   */
-  function spawnPlayer() {
-    if (!elWorld) return;
-    if (!elPlayer) return;
-
-    // make fresh copy of player data
+  function spawnPlayer(): void {
+    // make fresh copy of player data, and transfer elPlayer
     activePlayer = structuredClone(player);
 
-    // make player el
-    // activePlayer.el = generateDiv(activePlayer.sprite);
-    // activePlayer.el.id = "player";
-    let el = generateDiv(activePlayer.sprite);
-    elPlayer.insertBefore(el, elPlayer.firstElementChild);
+    // make player sprite
+    const elSprite = generateDiv(activePlayer.sprite);
+    activePlayer.el = elSprite;
+
+    // position sprite
+    if (!elGameWindow) {
+      console.error(`No element with id "game-window".`);
+      return;
+    }
+    activePlayer.el.style.left = `${(elGameWindow.clientWidth - activePlayer.sprite.width) / 2}px`;
+    activePlayer.el.style.top = `${(elGameWindow.clientHeight - activePlayer.sprite.height) / 2}px`;
 
     // add to game
-    activePlayer.el = elPlayer;
-
-    // set el position
-    // activePlayer.el.style.left = `${elWorld.clientWidth / 2 - activePlayer.sprite.width / 2}px`;
-    // activePlayer.el.style.top = `${elWorld.clientHeight / 2 - activePlayer.sprite.height / 2}px`;
-
-    // add to game
-    // elWorld.appendChild(activePlayer.el);
+    if (!elPlayer) {
+      console.error(`No element with id "player".`);
+      return;
+    }
+    elPlayer.insertBefore(elSprite, elPlayer.firstElementChild);
   }
 
   /*
@@ -480,7 +491,7 @@
     isPaused = false;
     timeElapsed = 0; // reset timer// reset timer
     enemiesKilled = 0;
-    // spawnId = 0;
+    spawnId = 0;
 
     // fullscreen
     elGameWindow.requestFullscreen();
@@ -671,50 +682,40 @@
       <div id="enemies" class="absolute h-full w-full"></div>
     </div>
 
-    <div
-      bind:this={elPlayer}
-      id="player"
-      class="absolute"
-      style:left="{(elWorld?.clientWidth ?? 1000) / 2 - (activePlayer?.sprite.width ?? 48) / 2}px"
-      style:top="{(elWorld?.clientHeight ?? 1000) / 2 - (activePlayer?.sprite.height ?? 48) / 2}px"
-      style:width="{(activePlayer?.sprite.width ?? 48) / 2}px"
-      style:height="{(activePlayer?.sprite.height ?? 48) / 2}px"
-    >
+    <div bind:this={elPlayer} id="player">
       <div
         id="health-bar"
-        class="relative mt-2"
-        style:top="{activePlayer?.sprite.height ??
-          48 + Math.round((activePlayer?.sprite.height ?? 48) / 1)}px"
-        style:width="{activePlayer?.sprite.width ?? 48}px"
+        class="absolute mt-2"
+        style:left="{(elGameWindow?.clientWidth ?? 1000) / 2 - activePlayer.sprite.width / 2}px"
+        style:top="{(elGameWindow?.clientHeight ?? 1000) / 2 + activePlayer.sprite.height / 2}px"
+        style:width="{activePlayer.sprite.width}px"
       >
-        {#if activePlayer}
-          <div class="sr-only flex flex-row gap-2">
-            <span>health:</span>
-            <span>{healthPercent}%</span>
-            <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
-          </div>
+        <div class="sr-only flex flex-row gap-2">
+          <span>health:</span>
+          <span>{healthPercent}%</span>
+          <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+        </div>
 
-          <div class="flex h-2 flex-row bg-gray-900">
-            <div class="bg-rose-500" style="width: {healthPercent}%"></div>
-          </div>
-        {/if}
+        <div class="flex h-2 flex-row bg-gray-900">
+          <div class="bg-rose-500" style="width: {healthPercent}%"></div>
+        </div>
       </div>
     </div>
 
     <div id="weapons"></div>
 
-    <!-- <div -->
-    <!--   id="center-world" -->
-    <!--   class="absolute h-4 w-4 bg-red-400" -->
-    <!--   style:left="{(elWorld?.clientWidth ?? 1000) / 2}px" -->
-    <!--   style:top="{(elWorld?.clientHeight ?? 1000) / 2}px" -->
-    <!-- ></div> -->
+    <div
+      id="center-world"
+      class="absolute h-4 w-4 bg-red-400"
+      style:left="{(elWorld?.clientWidth ?? 1000) / 2}px"
+      style:top="{(elWorld?.clientHeight ?? 1000) / 2}px"
+    ></div>
   </div>
 
-  <!-- <div -->
-  <!--   id="center-window" -->
-  <!--   class="absolute h-4 w-4 bg-lime-400" -->
-  <!--   style:left="{(elGameWindow?.clientWidth ?? 1000) / 2}px" -->
-  <!--   style:top="{(elGameWindow?.clientHeight ?? 1000) / 2}px" -->
-  <!-- ></div> -->
+  <div
+    id="center-window"
+    class="absolute h-4 w-4 bg-lime-400"
+    style:left="{(elGameWindow?.clientWidth ?? 1000) / 2}px"
+    style:top="{(elGameWindow?.clientHeight ?? 1000) / 2}px"
+  ></div>
 </div>
