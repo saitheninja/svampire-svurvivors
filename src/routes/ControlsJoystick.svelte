@@ -75,7 +75,7 @@
 
 <svelte:window {onpointerdown} {onpointermove} {onpointerup} />
 
-<!-- touch-none for pointermove touch events to not get hijacked -->
+<!-- touch-none for pointermove touch events to not get hijacked by browser -->
 <div id="joystick" class="absolute left-0 top-0 z-40 h-full w-full touch-none">
   <div
     id="joystick-base"

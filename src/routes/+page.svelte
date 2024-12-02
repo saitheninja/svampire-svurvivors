@@ -6,30 +6,30 @@
 
   import type { Alive, Sprite, Terrain, Weapon } from "$lib/definitions";
 
-  const durationGameEnd = 30 * 60 * 1000; // minute * seconds * milliseconds
+  const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
+
   // when filled, treasure chests won't offer that type
   const slotsWeapons = 6;
   const slotsAccessories = 6;
 
   // current game state
   let elGameWindow: HTMLDivElement | undefined = $state();
-  let elWorld: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
   let elPlayer: HTMLDivElement | undefined = $state();
 
   let isStarted = $state(false);
   let isFinished = $state(false);
+
   let spawnId = 0;
   let enemiesKilled = $state(0);
 
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive = $state(structuredClone(player));
   let activeWeapons: Weapon[] = $state([]);
-  let healthPercent = $state(100);
-  $effect(() => {
-    if (!activePlayer) return;
-    healthPercent = Math.round((activePlayer.healthCurrent / activePlayer.healthMax) * 100);
-  });
+
+  let healthPercent = $derived(
+    Math.round((activePlayer.healthCurrent / activePlayer.healthMax) * 100),
+  );
 
   // fps
   let timestampPrev = $state(0);
@@ -54,13 +54,14 @@
   */
   function setTerrain(el: HTMLDivElement, terrain: Terrain): void {
     // set dimensions
-    el.style.width = `${terrain.width}px`;
-    el.style.height = `${terrain.height}px`;
+    el.style.width = `${terrain.width + (elGameWindow?.clientWidth ?? 0)}px`;
+    el.style.height = `${terrain.height + (elGameWindow?.clientHeight ?? 0)}px`;
 
     // set background
     el.style.backgroundImage = `url(${terrain.imagePath})`;
     el.style.backgroundSize = `${terrain.width}px ${terrain.height}px`;
     el.style.backgroundRepeat = "no-repeat";
+    el.style.backgroundPosition = "center";
   }
 
   /*
@@ -178,8 +179,10 @@
     Calc player movement and scroll world.
   */
   function movePlayer(): void {
-    if (!elWorld) return;
+    if (!elGameWindow) return;
     if (!activePlayer) return;
+
+    // if no direction inputs
     if (!dirX && !dirY && !joystickTiltRatio) return;
 
     const distanceMax = (activePlayer.speed / 2) * timeSincePrevFrame;
@@ -187,13 +190,13 @@
     let distance = 0;
     let angle = 0;
 
-    // keys
+    // keyboard
     if (dirX || dirY) {
       distance = distanceMax;
       angle = Math.atan2(dirY, dirX);
     }
 
-    // joystick overrides keys
+    // joystick overrides keyboard
     if (joystickTiltRatio) {
       distance = distanceMax * joystickTiltRatio;
       angle = (joystickAngle * Math.PI) / 180;
@@ -206,7 +209,7 @@
     const roundedTop = roundTo3Places(top);
 
     // scroll world
-    elWorld.scrollBy({
+    elGameWindow.scrollBy({
       left: roundedLeft,
       top: roundedTop,
     });
@@ -216,10 +219,10 @@
     Enemies move towards player.
   */
   function moveEnemies(): void {
-    if (!elWorld) return;
+    if (!elGameWindow) return;
 
-    const playerX = elWorld.scrollLeft + elWorld.clientWidth / 2;
-    const playerY = elWorld.scrollTop + elWorld.clientHeight / 2;
+    const playerX = elGameWindow.scrollLeft + elGameWindow.clientWidth / 2;
+    const playerY = elGameWindow.scrollTop + elGameWindow.clientHeight / 2;
 
     activeEnemies.forEach(({ el, speed }) => {
       if (!el) return;
@@ -448,14 +451,6 @@
     const elSprite = generateDiv(activePlayer.sprite);
     activePlayer.el = elSprite;
 
-    // position sprite
-    if (!elGameWindow) {
-      console.error(`No element with id "game-window".`);
-      return;
-    }
-    activePlayer.el.style.left = `${(elGameWindow.clientWidth - activePlayer.sprite.width) / 2}px`;
-    activePlayer.el.style.top = `${(elGameWindow.clientHeight - activePlayer.sprite.height) / 2}px`;
-
     // add to game
     if (!elPlayer) {
       console.error(`No element with id "player".`);
@@ -474,10 +469,6 @@
       console.error(`No element with id "game-window".`);
       return;
     }
-    if (!elWorld) {
-      console.error(`No element with id "world".`);
-      return;
-    }
     if (!elTerrain) {
       console.error(`No element with id "terrain".`);
       return;
@@ -494,17 +485,17 @@
     spawnId = 0;
 
     // fullscreen
-    elGameWindow.requestFullscreen();
+    // fullscreen game-window sets height, width
+    // elGameWindow.requestFullscreen();
 
     // load map
     setTerrain(elTerrain, terrainForest);
 
-    const top = (elWorld.scrollHeight - elWorld.clientHeight) / 2;
-    const left = (elWorld.scrollWidth - elWorld.clientWidth) / 2;
-    // console.log(top, left);
+    const top = (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2;
+    const left = (elGameWindow.scrollWidth - elGameWindow.clientWidth) / 2;
 
     // scroll to center
-    elWorld.scrollTo({
+    elGameWindow.scrollTo({
       top: top,
       left: left,
     });
@@ -522,8 +513,12 @@
 
 <ControlsKeys bind:actionsActive bind:isPaused bind:dirX bind:dirY />
 
-<div id="game-window" bind:this={elGameWindow} class="flex h-screen flex-col bg-gray-900">
-  <div id="top-ui" class="absolute left-0 top-0 z-50 w-full p-1">
+<div id="game-window" bind:this={elGameWindow} class="h-screen w-screen overflow-auto bg-gray-900">
+  <div
+    id="top-ui"
+    class="absolute left-0 top-0 z-50 p-1"
+    style:width="{elGameWindow?.clientWidth ?? 1000}px"
+  >
     <div id="experience-bar" class="mb-2 rounded-lg border-2 border-blue-100 bg-gray-900 px-2 py-1">
       <h1 class="text-xl font-extrabold">Svampire Svurvivors</h1>
 
@@ -605,18 +600,6 @@
           <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
         </form>
 
-        <!-- <span class="text-cyan-500">scrollLeft: {elWorld?.scrollLeft}</span> -->
-        <!-- <span class="text-cyan-500">scrollWidth: {elWorld?.scrollWidth}</span> -->
-        <!-- <span class="text-cyan-500">clientWidth: {elWorld?.clientWidth}</span> -->
-        <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollWidth - elWorld.clientWidth : 0}</span> -->
-
-        <!-- <span class="text-cyan-500">scrollTop: {elWorld?.scrollTop}</span> -->
-        <!-- <span class="text-cyan-500">scrollHeight: {elWorld?.scrollHeight}</span> -->
-        <!-- <span class="text-cyan-500">clientHeight: {elWorld?.clientHeight}</span> -->
-        <!-- <span class="text-cyan-500">{elWorld ? elWorld.scrollHeight - elWorld.clientHeight : 0}</span> -->
-
-        <!-- <span class="text-cyan-500">actions: {actionsActive}</span> -->
-
         <!-- <span class="text-blue-500" -->
         <!--   >weapons: {activeWeapons.length} -->
         <!--   {#each activeWeapons as { sprite }} -->
@@ -646,76 +629,76 @@
     {/if}
   </div>
 
-  <div bind:this={elWorld} id="world" class="flex-grow overflow-auto bg-purple-900">
-    {#if !isStarted || isFinished}
-      <div id="info" class="mx-auto mt-80 max-w-max">
-        <form
-          id="form-start-game"
-          onsubmit={(event) => {
-            event.preventDefault();
-            startGame();
-          }}
-          class="mx-auto mb-8 mt-12 max-w-max"
-        >
-          <button
-            class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900"
-            >start game</button
-          >
-        </form>
-
-        <div>
-          <p>TODO:</p>
-
-          <ul class="list-disc">
-            <li>globals: score, experience, gold</li>
-            <li>map</li>
-            <li>power ups</li>
-            <li>arrows pointing to power ups</li>
-          </ul>
-        </div>
-      </div>
-    {:else if !isPaused}
-      <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
-    {/if}
-
-    <div bind:this={elTerrain} id="terrain" class="relative">
-      <div id="enemies" class="absolute h-full w-full"></div>
-    </div>
-
-    <div bind:this={elPlayer} id="player">
-      <div
-        id="health-bar"
-        class="absolute mt-2"
-        style:left="{(elGameWindow?.clientWidth ?? 1000) / 2 - activePlayer.sprite.width / 2}px"
-        style:top="{(elGameWindow?.clientHeight ?? 1000) / 2 + activePlayer.sprite.height / 2}px"
-        style:width="{activePlayer.sprite.width}px"
+  {#if !isStarted || isFinished}
+    <div id="info" class="mx-auto mt-80 max-w-max">
+      <form
+        id="form-start-game"
+        onsubmit={(event) => {
+          event.preventDefault();
+          startGame();
+        }}
+        class="mx-auto mb-8 mt-12 max-w-max"
       >
-        <div class="sr-only flex flex-row gap-2">
-          <span>health:</span>
-          <span>{healthPercent}%</span>
-          <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
-        </div>
+        <button
+          class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900"
+          >start game</button
+        >
+      </form>
 
-        <div class="flex h-2 flex-row bg-gray-900">
-          <div class="bg-rose-500" style="width: {healthPercent}%"></div>
-        </div>
+      <div>
+        <p>TODO:</p>
+
+        <ul class="list-disc">
+          <li>globals: score, experience, gold</li>
+          <li>map</li>
+          <li>power ups</li>
+          <li>arrows pointing to power ups</li>
+        </ul>
       </div>
     </div>
+  {:else if !isPaused}
+    <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
+  {/if}
 
-    <div id="weapons"></div>
-
-    <div
-      id="center-world"
-      class="absolute h-4 w-4 bg-red-400"
-      style:left="{(elWorld?.clientWidth ?? 1000) / 2}px"
-      style:top="{(elWorld?.clientHeight ?? 1000) / 2}px"
-    ></div>
+  <div bind:this={elTerrain} id="terrain" class="relative">
+    <div id="enemies" class="absolute left-0 top-0 h-full w-full"></div>
   </div>
 
   <div
     id="center-window"
-    class="absolute h-4 w-4 bg-lime-400"
+    class="absolute"
     style:left="{(elGameWindow?.clientWidth ?? 1000) / 2}px"
     style:top="{(elGameWindow?.clientHeight ?? 1000) / 2}px"
-  ></div>
+  >
+    <div
+      bind:this={elPlayer}
+      id="player"
+      class="absolute"
+      style:left="{-activePlayer.sprite.width / 2}px"
+      style:top="{-activePlayer.sprite.height / 2}px"
+      style:height="{activePlayer.sprite.height}px"
+      style:width="{activePlayer.sprite.width}px"
+    ></div>
+
+    <div
+      id="health-bar"
+      class="absolute mt-2"
+      class:hidden={!isStarted}
+      style:top="{activePlayer.sprite.height / 2}px"
+      style:left="{-activePlayer.sprite.width / 2}px"
+      style:width="{activePlayer.sprite.width}px"
+    >
+      <div id="health-bar-text" class="sr-only flex flex-row gap-2">
+        <span>health:</span>
+        <span>{healthPercent}%</span>
+        <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+      </div>
+
+      <div id="health-bar-percent" class="flex h-2 flex-row bg-gray-900">
+        <div class="bg-rose-500" style="width: {healthPercent}%"></div>
+      </div>
+    </div>
+
+    <div id="weapons"></div>
+  </div>
 </div>
