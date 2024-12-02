@@ -7,7 +7,7 @@
     joystickTiltRatio: number; // 0 to 1
   } = $props();
 
-  const radiusJoystick = 80; // px
+  const radiusJoystick = 60; // px
 
   // Pointer Events API provides hardware-agnostic notification from pointing devices including Mouse, Touch, pen/stylus.
   // Events fired on Document, HTMLElement.
@@ -76,7 +76,7 @@
 <svelte:window {onpointerdown} {onpointermove} {onpointerup} />
 
 <!-- touch-none for pointermove touch events to not get hijacked by browser -->
-<div id="joystick" class="absolute left-0 top-0 z-40 h-full w-full touch-none">
+<div id="joystick" class="absolute left-0 top-0 z-40 h-screen w-screen touch-none overflow-clip">
   <div
     id="joystick-base"
     class="absolute rounded-full bg-rose-950/50"
