@@ -488,7 +488,7 @@
     // fullscreen game-window sets height, width
     // elGameWindow.requestFullscreen();
 
-    // load map
+    // set map
     setTerrain(elTerrain, terrainForest);
 
     const top = (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2;
@@ -629,37 +629,6 @@
     {/if}
   </div>
 
-  {#if !isStarted || isFinished}
-    <div id="info" class="mx-auto mt-80 max-w-max">
-      <form
-        id="form-start-game"
-        onsubmit={(event) => {
-          event.preventDefault();
-          startGame();
-        }}
-        class="mx-auto mb-8 mt-12 max-w-max"
-      >
-        <button
-          class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900"
-          >start game</button
-        >
-      </form>
-
-      <div>
-        <p>TODO:</p>
-
-        <ul class="list-disc">
-          <li>globals: score, experience, gold</li>
-          <li>map</li>
-          <li>power ups</li>
-          <li>arrows pointing to power ups</li>
-        </ul>
-      </div>
-    </div>
-  {:else if !isPaused}
-    <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
-  {/if}
-
   <div bind:this={elTerrain} id="terrain" class="relative">
     <div id="enemies" class="absolute left-0 top-0 h-full w-full"></div>
   </div>
@@ -699,6 +668,41 @@
       </div>
     </div>
 
-    <div id="weapons"></div>
+    <div id="weapons" class="z-10"></div>
   </div>
 </div>
+
+{#if !isStarted || isFinished}
+  <div
+    id="start-screen"
+    class="absolute left-0 top-0 z-50 h-screen w-screen place-items-center content-center space-y-6 bg-rose-950"
+  >
+    <h1 class="text-center text-6xl font-extrabold">Svampire Svurvivors</h1>
+
+    <form
+      id="form-start-game"
+      onsubmit={(event) => {
+        event.preventDefault();
+        startGame();
+      }}
+    >
+      <button
+        class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900"
+        >start game</button
+      >
+    </form>
+
+    <!-- <div> -->
+    <!--   <p>TODO:</p> -->
+    <!---->
+    <!--   <ul class="list-disc"> -->
+    <!--     <li>globals: score, experience, gold</li> -->
+    <!--     <li>map</li> -->
+    <!--     <li>power ups</li> -->
+    <!--     <li>arrows pointing to power ups</li> -->
+    <!--   </ul> -->
+    <!-- </div> -->
+  </div>
+{:else if !isPaused}
+  <ControlsJoystick bind:joystickAngle bind:joystickTiltRatio />
+{/if}
