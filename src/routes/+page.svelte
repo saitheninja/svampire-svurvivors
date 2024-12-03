@@ -221,17 +221,16 @@
   function moveEnemies(): void {
     if (!elGameWindow) return;
 
+    // get player position
     const playerX = elGameWindow.scrollLeft + elGameWindow.clientWidth / 2;
     const playerY = elGameWindow.scrollTop + elGameWindow.clientHeight / 2;
 
-    activeEnemies.forEach(({ el, speed }) => {
-      // get current position
+    activeEnemies.forEach(({ el, speed }, i1) => {
       if (!el) return;
+
+      // get current position
       const left = parseFloat(el.style.left);
       const top = parseFloat(el.style.top);
-
-      // calc travel distance
-      const distanceMaxMove = speed * timeSincePrevFrame;
 
       // calc diff with player
       const diffX = left - playerX;
@@ -239,35 +238,53 @@
       const distanceToPlayer = Math.sqrt(Math.pow(diffX, 2) + Math.pow(diffY, 2));
       const angleToPlayer = Math.atan2(diffY, diffX);
 
-      // move to player position
+      // calc max travel distance
+      const distanceMaxMove = speed * timeSincePrevFrame;
+
+      // prep move
+      let leftMove = 0;
+      let topMove = 0;
+
       if (distanceMaxMove >= distanceToPlayer) {
-        el.style.left = `${playerX}px`;
-        el.style.top = `${playerY}px`;
-        return;
+        // move to player position
+        leftMove = playerX;
+        topMove = playerY;
+      } else {
+        // calc new position
+        const moveX = Math.cos(angleToPlayer) * distanceMaxMove;
+        const moveY = Math.sin(angleToPlayer) * distanceMaxMove;
+
+        leftMove = left - moveX;
+        topMove = top - moveY;
       }
 
-      // calc move distance
-      const moveX = Math.cos(angleToPlayer) * distanceMaxMove;
-      const moveY = Math.sin(angleToPlayer) * distanceMaxMove;
-
       // move el
-      el.style.left = `${left - moveX}px`;
-      el.style.top = `${top - moveY}px`;
-    });
+      el.style.left = `${leftMove}px`;
+      el.style.top = `${topMove}px`;
 
-    // if enemyMoving's new position will overlap with another enemy, cancel move.
-    // let isColliding = false;
-    //
-    // activeEnemies.forEach(enemy=>{
-    // const check = checkCollision(enemy, enemyMoving);
-    // if (!check) return;
-    //
-    // isColliding = true;
-    // break;
-    // });
-    //
-    // if (isColliding) return;
-    // move enemy
+      // if new position will overlap with another enemy, move back to original position
+      let isColliding = false;
+
+      for (let i2 = 0; i2 < activeEnemies.length; i2++) {
+        // same enemy
+        if (i1 === i2) continue;
+
+        const elOther = activeEnemies[i2].el;
+        if (!elOther) continue;
+
+        const check = isCollidingCheck(el, elOther);
+        if (!check) continue;
+
+        isColliding = true;
+        break;
+      }
+
+      if (!isColliding) return;
+
+      // move el back to original position
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    });
   }
 
   }
@@ -588,7 +605,6 @@
       <div class="flex flex-col gap-1 justify-self-end text-end">
         <span>{0} 🪙</span>
         <span>{enemiesKilled} 💀</span>
-        <span class="text-blue-700">{fps} fps</span>
 
         <form
           onsubmit={(event) => {
@@ -613,6 +629,8 @@
         >
           <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
         </form>
+
+        <span class="text-blue-700">{fps} fps</span>
 
         <!-- <span class="text-blue-500" -->
         <!--   >weapons: {activeWeapons.length} -->
