@@ -225,37 +225,51 @@
     const playerY = elGameWindow.scrollTop + elGameWindow.clientHeight / 2;
 
     activeEnemies.forEach(({ el, speed }) => {
+      // get current position
       if (!el) return;
-      let left = parseFloat(el.style.left);
-      let top = parseFloat(el.style.top);
+      const left = parseFloat(el.style.left);
+      const top = parseFloat(el.style.top);
 
-      const distance = (speed / 20) * timeSincePrevFrame;
+      // calc travel distance
+      const distanceMaxMove = speed * timeSincePrevFrame;
 
-      const difX = left - playerX;
-      const difY = top - playerY;
+      // calc diff with player
+      const diffX = left - playerX;
+      const diffY = top - playerY;
+      const distanceToPlayer = Math.sqrt(Math.pow(diffX, 2) + Math.pow(diffY, 2));
+      const angleToPlayer = Math.atan2(diffY, diffX);
 
-      if (Math.abs(difX) > distance) {
-        if (difX > 0) {
-          left = left - distance;
-        } else {
-          left = left + distance;
-        }
-      } else {
-        left = playerX;
-      }
-      if (Math.abs(difY) > distance) {
-        if (difY > 0) {
-          top = top - distance;
-        } else {
-          top = top + distance;
-        }
-      } else {
-        top = playerY;
+      // move to player position
+      if (distanceMaxMove >= distanceToPlayer) {
+        el.style.left = `${playerX}px`;
+        el.style.top = `${playerY}px`;
+        return;
       }
 
-      el.style.left = `${left}px`;
-      el.style.top = `${top}px`;
+      // calc move distance
+      const moveX = Math.cos(angleToPlayer) * distanceMaxMove;
+      const moveY = Math.sin(angleToPlayer) * distanceMaxMove;
+
+      // move el
+      el.style.left = `${left - moveX}px`;
+      el.style.top = `${top - moveY}px`;
     });
+
+    // if enemyMoving's new position will overlap with another enemy, cancel move.
+    // let isColliding = false;
+    //
+    // activeEnemies.forEach(enemy=>{
+    // const check = checkCollision(enemy, enemyMoving);
+    // if (!check) return;
+    //
+    // isColliding = true;
+    // break;
+    // });
+    //
+    // if (isColliding) return;
+    // move enemy
+  }
+
   }
 
   /*
@@ -300,7 +314,7 @@
       enemiesKilled += 1;
     });
 
-    // remove from `enemiesActive` if health 0 or below
+    // remove if health 0 or below
     activeEnemies = activeEnemies.filter((enemy) => enemy.healthCurrent > 0);
   }
 

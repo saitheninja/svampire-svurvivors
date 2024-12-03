@@ -101,7 +101,7 @@ const enemySkeleton: Alive = {
   name: "skeleton",
   healthCurrent: 1,
   healthMax: 1,
-  speed: 1,
+  speed: 0.1,
   weapons: [],
   sprite: {
     name: "skeleton",
@@ -117,7 +117,7 @@ const enemyZombie: Alive = {
   name: "zombie",
   healthCurrent: 4,
   healthMax: 4,
-  speed: 2,
+  speed: 0.1,
   weapons: [],
   sprite: {
     name: "zombie",
@@ -133,12 +133,12 @@ const enemyGoblin: Alive = {
   name: "goblin",
   healthCurrent: 100,
   healthMax: 100,
-  speed: 0.5,
+  speed: 0.05,
   weapons: [],
   sprite: {
     name: "goblin",
     colorBg: "rgb(239 68 68)", // bg-red-500
-    colorHit: "rgb(252 165 165)", // big-red-300
+    colorHit: "rgb(252 165 165)", // bg-red-300
     emoji: "👺",
     fontSize: 80,
     width: 80,
