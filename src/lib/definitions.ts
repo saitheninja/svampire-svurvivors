@@ -34,6 +34,8 @@ export interface Weapon extends GameObject {
   durationActiveElapsed: number;
   durationCooldown: number;
   durationCooldownElapsed: number;
+  // levelCurrent: number;
+  // levelMax: number;
 }
 
 const whip: Weapon = {
@@ -163,3 +165,79 @@ export const enemyWave: Alive[] = [
   enemyZombie,
   enemyZombie,
 ];
+
+interface PlayerLevel {
+  level: number;
+  xpToNext: number;
+}
+const xpStep = 10;
+export const playerLevels: PlayerLevel[] = [
+  { level: 1, xpToNext: xpStep * 1 },
+  { level: 2, xpToNext: xpStep * 2 },
+  { level: 3, xpToNext: xpStep * 3 },
+  { level: 4, xpToNext: xpStep * 4 },
+  { level: 5, xpToNext: xpStep * 5 },
+  { level: 6, xpToNext: xpStep * 6 },
+  { level: 7, xpToNext: xpStep * 7 },
+  { level: 8, xpToNext: xpStep * 8 },
+  { level: 9, xpToNext: xpStep * 9 },
+  { level: 10, xpToNext: xpStep * 10 },
+];
+// on level up, choose upgrade
+
+export const pickupXp: Sprite = {
+  name: "experience-gem",
+  colorBg: "rgb(139 92 246)", // bg-violet-500
+  colorHit: "rgb(196 181 253)", // bg-violet-300
+  // emoji: "🎟️", "🎫", "♦️", "🫘", "🧬", "💙", "🟪", "🟦", "🟩", "🟨", "🟧", "🟥"
+  emoji: "🟪",
+  fontSize: 20,
+  width: 20,
+  height: 20,
+};
+
+// bg-violet-50 rgb(245 243 255);
+// bg-violet-100 rgb(237 233 254);
+// bg-violet-200 rgb(221 214 254);
+// bg-violet-300 rgb(196 181 253);
+// bg-violet-400 rgb(167 139 250);
+// bg-violet-500 rgb(139 92 246);
+// bg-violet-600 rgb(124 58 237);
+// bg-violet-700 rgb(109 40 217);
+// bg-violet-800 rgb(91 33 182);
+// bg-violet-900 rgb(76 29 149);
+// bg-violet-950 rgb(46 16 101);
+//
+// bg-purple-50 rgb(250 245 255);
+// bg-purple-100 rgb(243 232 255);
+// bg-purple-200 rgb(233 213 255);
+// bg-purple-300 rgb(216 180 254);
+// bg-purple-400 rgb(192 132 252);
+// bg-purple-500 rgb(168 85 247);
+// bg-purple-600 rgb(147 51 234);
+// bg-purple-700 rgb(126 34 206);
+// bg-purple-800 rgb(107 33 168);
+// bg-purple-900 rgb(88 28 135);
+// bg-purple-950 rgb(59 7 100);
+//
+// bg-fuchsia-50 rgb(253 244 255);
+// bg-fuchsia-100 rgb(250 232 255);
+// bg-fuchsia-200 rgb(245 208 254);
+// bg-fuchsia-300 rgb(240 171 252);
+// bg-fuchsia-400 rgb(232 121 249);
+// bg-fuchsia-500 rgb(217 70 239);
+// bg-fuchsia-600 rgb(192 38 211);
+// bg-fuchsia-700 rgb(162 28 175);
+// bg-fuchsia-800 rgb(134 25 143);
+// bg-fuchsia-900 rgb(112 26 117);
+// bg-fuchsia-950 rgb(74 4 78);
+//
+// accessoryLuck: "🍀"
+// pickupHealthSmall: "🍗"
+// pickupHealthMedium: "🥩",
+// pickupHealthLarge: "🍖"
+// pickupGoldCoin: "🪙"
+// pickupGoldBag: "💰"
+// weaponBoomerang: "🪃"
+// weaponAxe: "🪓"
+// enemyOgre: "👹"

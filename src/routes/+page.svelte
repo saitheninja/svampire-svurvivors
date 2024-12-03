@@ -2,7 +2,7 @@
   import ControlsKeys from "./ControlsKeys.svelte";
   import ControlsJoystick from "./ControlsJoystick.svelte";
 
-  import { enemyWave, player, terrainForest } from "$lib/definitions";
+  import { enemyWave, player, terrainForest, playerLevels, pickupXp } from "$lib/definitions";
 
   import type { Alive, Sprite, Terrain, Weapon } from "$lib/definitions";
 
@@ -23,13 +23,18 @@
   let spawnId = 0;
   let enemiesKilled = $state(0);
 
+  // active game objects
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive = $state(structuredClone(player));
   let activeWeapons: Weapon[] = $state([]);
+  let activeExperiencePickups: HTMLElement[] = $state([]);
 
   let healthPercent = $derived(
     Math.round((activePlayer.healthCurrent / activePlayer.healthMax) * 100),
   );
+
+  let playerLevel = $state(1);
+  let playerLevelXp = $state(0);
 
   // fps
   let timestampPrev = $state(0);
@@ -287,6 +292,27 @@
     });
   }
 
+  /*
+    Spawn experience pickup. Called when enemy is killed.
+  */
+  function spawnExperienceGem(enemy: Alive): void {
+    if (!elTerrain) {
+      console.error(`No div with id "terrain".`);
+      return;
+    }
+    if (!enemy.el) {
+      console.error(`No enemy el.`);
+      return;
+    }
+
+    const el = generateDiv(pickupXp);
+
+    el.style.left = enemy.el.style.left;
+    el.style.top = enemy.el.style.top;
+    el.style.rotate = "45deg"; // point at top
+
+    activeExperiencePickups.push(el);
+    elTerrain.appendChild(el);
   }
 
   /*
@@ -327,6 +353,9 @@
     // check enemy health, remove el if dead
     activeEnemies.forEach((enemy) => {
       if (enemy.healthCurrent > 0) return;
+
+      spawnExperienceGem(enemy);
+
       enemy.el?.remove();
       enemiesKilled += 1;
     });
@@ -434,6 +463,43 @@
   }
 
   /*
+    Check if player overlaps with xp pickup.
+  */
+  function checkExperiencePickup(): void {
+    activeExperiencePickups.forEach((pickup) => {
+      if (!activePlayer.el) {
+        console.error("No activePlayer el.");
+        return;
+      }
+
+      // check if player collides
+      const isCollidingPlayer = isCollidingCheck(pickup, activePlayer.el);
+      if (!isCollidingPlayer) return;
+
+      // add to total xp
+      playerLevelXp += 1;
+
+      // remove el
+      pickup.remove();
+    });
+  }
+
+  /*
+    Check if player has enough xp to level up.
+  */
+  function checkLevelUp(): void {
+    // max level currently defined
+    if (playerLevel >= 10) return;
+
+    const xpToNext = playerLevels[playerLevel - 1].xpToNext;
+
+    if (xpToNext > playerLevelXp) return;
+
+    playerLevelXp = playerLevelXp - xpToNext;
+    playerLevel += 1;
+  }
+
+  /*
     Check timer, player health.
   */
   function checkGameOver(): boolean {
@@ -465,6 +531,8 @@
       moveEnemies();
       checkEnemiesHit();
       checkPlayerHit();
+      checkExperiencePickup();
+      checkLevelUp();
     }
 
     // new frame
@@ -514,6 +582,8 @@
     timeElapsed = 0; // reset timer// reset timer
     enemiesKilled = 0;
     spawnId = 0;
+    playerLevelXp = 0;
+    playerLevel = 1;
 
     // fullscreen
     // fullscreen game-window sets height, width
@@ -550,25 +620,27 @@
     class="absolute left-0 top-0 z-50 p-1"
     style:width="{elGameWindow?.clientWidth ?? 1000}px"
   >
-    <div id="experience-bar" class="mb-2 rounded-lg border-2 border-blue-100 bg-gray-900 px-2 py-1">
-      <h1 class="text-xl font-extrabold">Svampire Svurvivors</h1>
+    <div id="experience-bar" class="mb-2 rounded-lg border-2 border-yellow-300 bg-gray-900 p-1">
+      <div class="flex w-full flex-row justify-between">
+        <h1 class="text-xl font-extrabold">Svampire Svurvivors</h1>
 
-      <!-- {#if activePlayer} -->
-      <!--   {@const experiencePercent = -->
-      <!--     (activePlayer.experienceCurrent / activePlayer.experienceNextLevel) * 100} -->
-      <!---->
-      <!--   <div class="sr-only flex flex-row gap-2"> -->
-      <!--     <span>experience:</span> -->
-      <!--     <span>{Math.round(experiencePercent)}%</span> -->
-      <!--     <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span> -->
-      <!--   </div> -->
-      <!---->
-      <!--   <div class="flex h-4 flex-row bg-gray-600"> -->
-      <!--     <div class="bg-blue-500" style="width: {experiencePercent}%"></div> -->
-      <!---->
-      <!--     <span class="ml-auto max-w-max">{activePlayer.level}</span> -->
-      <!--   </div> -->
-      <!-- {/if} -->
+        <span class="font-bold">Level {playerLevel}</span>
+      </div>
+
+      {#if activePlayer}
+        {@const xpToNext = playerLevels[playerLevel - 1].xpToNext}
+        {@const experiencePercent = (playerLevelXp / xpToNext) * 100}
+
+        <div class="sr-only flex flex-row gap-2">
+          <span>experience:</span>
+          <span>{Math.round(experiencePercent)}%</span>
+          <span>{playerLevelXp} / xpToNext}</span>
+        </div>
+
+        <div class="flex h-6 flex-row bg-gray-600">
+          <div class="rounded bg-blue-500" style="width: {experiencePercent}%"></div>
+        </div>
+      {/if}
     </div>
 
     <div class="grid grid-cols-3 grid-rows-1">
