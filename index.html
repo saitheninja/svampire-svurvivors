@@ -5,23 +5,23 @@
 		<link rel="icon" href="./favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		
-		<link href="./_app/immutable/assets/0.DExE4hKX.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.cfEtcDis.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/entry.DNlGxuHB.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/runtime.COdoLDON.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.DCSkHyIG.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/store.Oc-QfHXc.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/disclose-version.DkZ32_cM.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/props.D-k2i8hj.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/0.Dvz0-ucK.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/2.DmcB2UlW.js">
+		<link href="./_app/immutable/assets/0.BBUAKK3e.css" rel="stylesheet">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.B7lbC8qO.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/entry.g9pRA9Uq.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/runtime.CT879Py1.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.Cx1Ndsfe.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/store.Cv53v3pe.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/disclose-version.Bs1v99qL.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/props.Bq_WqkoQ.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/0.B3sfwQYP.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/2.Dp121XiG.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><!--[!--><!--]--><!----> <div id="game-window" class="flex h-screen flex-col bg-gray-900"><div id="top-ui" class="z-50 flex flex-shrink gap-2 bg-rose-950 py-1"><h1 class="text-center text-xl font-extrabold">Svampire Svurvivors</h1> <img src="./terrain-forest.svg" alt="Minimap of forest area." class="size-8"> <form><button class="bg-rose-900 px-4 py-1 font-extrabold"><!--[-->pause<!--]--></button></form> <form><button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button></form> <time id="timer" datetime="PT0M0S" class="flex flex-row gap-0 text-blue-500"><span>00</span> <span>:</span> <span>00</span></time> <span class="text-blue-700">Infinity fps</span>     <span class="text-blue-500">weapons: 0 <!--[--><!--]--></span> <span class="text-lime-500">enemies: 0 <!--[--><!--]--></span> <div id="health-bar" class="max-w-max"><!--[!--><!--]--></div></div> <div id="world" class="flex-grow overflow-auto bg-purple-900"><!--[--><div id="info" class="mx-auto max-w-max"><form id="form-start-game" class="mx-auto mb-8 mt-12 max-w-max"><button class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900">start game</button></form> <details class="space-y-4"><summary><span>It's like <a href="https://store.steampowered.com/app/1794680/Vampire_Survivors/" class="underline">Vampire Survivors</a>, but built with Svelte, for the web.</span> <span>I am so funny haha.</span></summary> <div><p>Links:</p> <ul class="list-disc"><li><a href="https://hack.sveltesociety.dev/2024/rules">SvelteHack Rules</a></li> <li><a href="https://hack.sveltesociety.dev/2023/winners">SvelteHack Winnners 2013</a></li> <li>Previous winner, <a href="https://hack.sveltesociety.dev/2023/winners">Wolfenstein 3D</a></li> <li><a href="https://coherent-labs.com/blog/uitutorials/virtual-joystick/">Touch joystick tutorial</a></li></ul></div> <div><p>TODO:</p> <ul class="list-disc"><li>globals: health, score, timer, experience, gold</li> <li>touch controls</li> <li>boss monsters</li> <li>weapons</li> <li>map</li> <li>power ups</li> <li>arrows pointing to power ups</li> <li>map tiles editor</li></ul></div></details></div><!--]--> <div id="terrain" class="relative"><div id="enemies" class="absolute h-full w-full"></div></div> <div id="weapons"></div></div></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
+		<div style="display: contents"><!--[--><!--[--><!----><!----><!--[!--><!--]--><!----> <div id="game-window" class="h-screen w-screen overflow-auto bg-gray-900"><div style="width: 1000px;" id="top-ui" class="absolute left-0 top-0 z-50 p-1"><div id="experience-bar" class="mb-2 rounded-lg border-2 border-yellow-300 bg-gray-900 p-1"><div class="flex w-full flex-row justify-between"><h1 class="text-xl font-extrabold">Svampire Svurvivors</h1> <span class="font-bold">Level 1</span></div> <!--[--><div class="sr-only flex flex-row gap-2"><span>experience:</span> <span>0%</span> <span>0 / xpToNext}</span></div> <div class="flex h-6 flex-row bg-gray-600"><div class="rounded bg-blue-500" style="width: 0%"></div></div><!--]--></div> <div class="grid grid-cols-3 grid-rows-1"><div class="flex flex-col gap-1 justify-self-start text-center"><div class="flex flex-row gap-1"><!--[--><span class="w-6 overflow-clip border-2 border-white/30">🔗🔗🔗🔗</span><span class="w-6 overflow-clip border-2 border-white/30">🗡️</span><!--]--></div> <div class="flex flex-row gap-1"><!--[--><span class="w-6 border-2 border-white/30">0</span><span class="w-6 border-2 border-white/30">1</span><span class="w-6 border-2 border-white/30">2</span><span class="w-6 border-2 border-white/30">3</span><span class="w-6 border-2 border-white/30">4</span><span class="w-6 border-2 border-white/30">5</span><!--]--></div> <div class="flex flex-row gap-1"><!--[--><span class="w-6 border-2 border-dotted border-white/30">0</span><span class="w-6 border-2 border-dotted border-white/30">1</span><span class="w-6 border-2 border-dotted border-white/30">2</span><span class="w-6 border-2 border-dotted border-white/30">3</span><span class="w-6 border-2 border-dotted border-white/30">4</span><span class="w-6 border-2 border-dotted border-white/30">5</span><!--]--></div></div> <time id="timer" datetime="PT0M0S" class="flex flex-row gap-0 justify-self-center text-lg font-extrabold text-white"><span>00</span> <span>:</span> <span>00</span></time> <div class="flex flex-col gap-1 justify-self-end text-end"><span>0 🪙</span> <span>0 💀</span> <form><button class="bg-rose-900 px-4 py-1 font-extrabold"><!--[-->pause<!--]--></button></form> <form><button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button></form> <span class="text-blue-700">Infinity fps</span></div></div> <!--[!--><!--]--></div> <div id="terrain" class="relative"><div id="enemies" class="absolute left-0 top-0 h-full w-full"></div></div> <div style="left: 500px; top: 500px;" id="center-window" class="absolute"><div style="left: -24px; top: -24px; height: 48px; width: 48px;" id="player" class="absolute"></div> <div style="top: 24px; left: -24px; width: 48px;" id="health-bar" class="absolute mt-2 hidden"><div id="health-bar-text" class="sr-only flex flex-row gap-2"><span>health:</span> <span>100%</span> <span>100 / 100</span></div> <div id="health-bar-percent" class="flex h-2 flex-row bg-gray-900"><div class="bg-rose-500" style="width: 100%"></div></div></div> <div id="weapons" class="z-10"></div></div></div> <!--[--><div id="start-screen" class="absolute left-0 top-0 z-50 h-screen w-screen place-items-center content-center space-y-6 bg-rose-950"><h1 class="text-center text-6xl font-extrabold">Svampire Svurvivors</h1> <form id="form-start-game"><button class="border-b-8 border-red-900 bg-rose-600 px-8 py-2 font-extrabold text-white shadow-md shadow-red-900">start game</button></form></div><!--]--><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
 			
 			<script>
 				{
-					__sveltekit_w3m3ro = {
+					__sveltekit_tllfwe = {
 						base: new URL(".", location).pathname.slice(0, -1),
 						assets: "/svampire-svurvivors"
 					};
@@ -31,8 +31,8 @@
 					const data = [null,null];
 
 					Promise.all([
-						import("./_app/immutable/entry/start.cfEtcDis.js"),
-						import("./_app/immutable/entry/app.DCSkHyIG.js")
+						import("./_app/immutable/entry/start.B7lbC8qO.js"),
+						import("./_app/immutable/entry/app.Cx1Ndsfe.js")
 					]).then(([kit, app]) => {
 						kit.start(app, element, {
 							node_ids: [0, 2],
