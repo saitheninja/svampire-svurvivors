@@ -1,14 +1,4 @@
-interface ImageSvg {
-  path: string;
-  height: number;
-  width: number;
-}
-
-export interface WorldMap {
-  name: string;
-  terrain: ImageSvg;
-  background: ImageSvg; // tiles
-}
+import type { WorldMap, Sprite, Alive, Weapon } from "./engine";
 
 export const mapForest: WorldMap = {
   name: "forest",
@@ -24,33 +14,7 @@ export const mapForest: WorldMap = {
   },
 };
 
-export interface Sprite {
-  name: string;
-  colorBg: string;
-  colorHit: string;
-  emoji: string;
-  fontSize: number; // px
-  height: number; // px
-  width: number; // px
-}
-
-interface GameObject {
-  name: string;
-  sprite: Sprite;
-  el?: HTMLDivElement;
-}
-
-export interface Weapon extends GameObject {
-  damage: number;
-  durationActive: number; // milliseconds
-  durationActiveElapsed: number;
-  durationCooldown: number;
-  durationCooldownElapsed: number;
-  // levelCurrent: number;
-  // levelMax: number;
-}
-
-const whip: Weapon = {
+const weaponWhip: Weapon = {
   name: "whip",
   damage: 2,
   durationActive: 1000,
@@ -67,7 +31,7 @@ const whip: Weapon = {
     height: 24,
   },
 };
-const sword: Weapon = {
+const weaponSword: Weapon = {
   name: "sword",
   damage: 4,
   durationActive: 2000,
@@ -85,14 +49,7 @@ const sword: Weapon = {
   },
 };
 
-const weaponsAll: Weapon[] = [whip, sword];
-
-export interface Alive extends GameObject {
-  healthCurrent: number;
-  healthMax: number;
-  speed: number;
-  weapons: Weapon[];
-}
+const weaponsAll: Weapon[] = [weaponWhip, weaponSword];
 
 export const player: Alive = {
   name: "player",

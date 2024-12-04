@@ -1,10 +1,11 @@
 <script lang="ts">
-  import ControlsKeys from "./ControlsKeys.svelte";
   import ControlsJoystick from "./ControlsJoystick.svelte";
+  import ControlsKeys from "./ControlsKeys.svelte";
 
-  import { enemyWave, player, mapForest, playerLevels, pickupXp } from "$lib/definitions";
+  import { enemyWave, player, mapForest, playerLevels, pickupXp } from "./data";
+  import { generateDiv, isCollidingCheck, roundTo3Places, setMap } from "./engine";
 
-  import type { Alive, Sprite, WorldMap, Weapon } from "$lib/definitions";
+  import type { Alive, Weapon } from "./engine";
 
   const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
 
@@ -55,72 +56,9 @@
   let joystickTiltRatio = $state(0); // 0 to 1
 
   /*
-    Attach `terrain` as backgroundImage for `el`.
-  */
-  function setMap(elGameWindow: HTMLDivElement, elTerrain: HTMLDivElement, map: WorldMap): void {
-    // set background tile
-    elGameWindow.style.backgroundImage = `url(${map.background.path})`;
-    elGameWindow.style.backgroundSize = `${map.background.width}px ${map.background.height}px`;
-    elGameWindow.style.backgroundRepeat = "repeat";
-
-    // set terrain dimensions
-    elTerrain.style.width = `${map.terrain.width + elGameWindow.clientWidth}px`;
-    elTerrain.style.height = `${map.terrain.height + elGameWindow.clientHeight}px`;
-
-    // set terrain background
-    elTerrain.style.backgroundImage = `url(${map.terrain.path})`;
-    elTerrain.style.backgroundSize = `${map.terrain.width}px ${map.terrain.height}px`;
-    elTerrain.style.backgroundRepeat = "no-repeat";
-    elTerrain.style.backgroundPosition = "center";
-  }
-
-  /*
-    Generate div for given sprite.
-  */
-  function generateDiv(sprite: Sprite): HTMLDivElement {
-    const elEmoji = document.createElement("span");
-    elEmoji.id = `emoji-${spawnId}`;
-
-    elEmoji.textContent = sprite.emoji;
-    elEmoji.style.fontSize = `${sprite.fontSize}px`;
-
-    const elName = document.createElement("span");
-    elName.id = `name-${spawnId}`;
-
-    elName.textContent = sprite.name;
-    elName.classList.add("sr-only");
-
-    const elDiv = document.createElement("div");
-    elDiv.id = `sprite-${spawnId}`;
-
-    elDiv.appendChild(elEmoji);
-    elDiv.appendChild(elName);
-
-    elDiv.style.position = "absolute";
-    elDiv.style.width = `${sprite.width}px`;
-    elDiv.style.height = `${sprite.height}px`;
-
-    elDiv.style.overflow = "clip";
-
-    // set bg color alpha to 50%
-    elDiv.style.backgroundColor = sprite.colorBg.replace(")", " / 0.5)");
-
-    //  center emoji in div
-    elEmoji.style.marginLeft = `${-sprite.fontSize / 10}px`;
-    elEmoji.style.marginTop = `${-sprite.fontSize / 4}px`;
-    elDiv.style.display = "flex";
-    elDiv.style.flexDirection = "row";
-
-    // track no. of spawns
-    spawnId += 1;
-
-    return elDiv;
-  }
-
-  /*
-    Spawn each enemy in `wave`, and attach it to `el`.
-    Uses element with id `enemies`.
-  */
+   * Spawn each enemy in `wave`, and attach it to `el`.
+   * Uses element with id `enemies`.
+   */
   function spawnEnemyWaveCircle(wave: Alive[], list: Alive[]): void {
     // Roll for upgraded monster that drops treasure chest on defeat
 
@@ -136,7 +74,7 @@
     wave.forEach((enemy, i) => {
       // make new enemy
       let newEnemy = structuredClone(enemy);
-      newEnemy.el = generateDiv(newEnemy.sprite);
+      newEnemy.el = generateDiv(newEnemy.sprite, spawnId);
 
       // calc x, y from angle in circle
       const angle = spread * i;
@@ -157,37 +95,8 @@
   }
 
   /*
-    Check if div bounding boxes overlap.
-  */
-  function isCollidingCheck(div1: Element, div2: Element): boolean {
-    let d1Rect = div1.getBoundingClientRect();
-    let d2Rect = div2.getBoundingClientRect();
-
-    const isNotCollidingBottom = d1Rect.bottom < d2Rect.top; // bottom1 higher than top2  1--' ,--2
-    const isNotCollidingTop = d2Rect.bottom < d1Rect.top; // bottom2 higher than top1     2--' ,--1
-    const isNotCollidingRight = d1Rect.right < d2Rect.left; // 1__| |__2
-    const isNotCollidingLeft = d2Rect.right < d1Rect.left; //  2__| |__1
-
-    const notColliding =
-      isNotCollidingBottom || isNotCollidingTop || isNotCollidingRight || isNotCollidingLeft;
-
-    return !notColliding;
-  }
-
-  /*
-    Custom rounding.
-  */
-  function roundTo3Places(n: number): number {
-    const n3 = n * 1_000;
-    const rounded = Math.round(n3);
-    const divided = rounded / 1_000;
-
-    return divided;
-  }
-
-  /*
-    Calc player movement and scroll world.
-  */
+   * Calc player movement and scroll world.
+   */
   function movePlayer(): void {
     if (!elGameWindow) return;
     if (!activePlayer) return;
@@ -226,8 +135,8 @@
   }
 
   /*
-    Enemies move towards player.
-  */
+   * Enemies move towards player.
+   */
   function moveEnemies(): void {
     if (!elGameWindow) return;
 
@@ -298,8 +207,8 @@
   }
 
   /*
-    Spawn experience pickup. Called when enemy is killed.
-  */
+   * Spawn experience pickup. Called when enemy is killed.
+   */
   function spawnExperienceGem(enemy: Alive): void {
     if (!elTerrain) {
       console.error(`No div with id "terrain".`);
@@ -310,7 +219,7 @@
       return;
     }
 
-    const el = generateDiv(pickupXp);
+    const el = generateDiv(pickupXp, spawnId);
 
     el.style.left = enemy.el.style.left;
     el.style.top = enemy.el.style.top;
@@ -321,9 +230,9 @@
   }
 
   /*
-    Check enemies overlap with player weapons.
-  */
-  function checkEnemiesHit(): void {
+   * Check enemies overlap with player weapons.
+   */
+  function checkEnemiesHit(activeEnemies: Alive[], activeWeapons: Weapon[]): Alive[] {
     // check if enemy hit by player weapons
     activeEnemies.forEach((enemy) => {
       if (!enemy.el) return;
@@ -353,25 +262,24 @@
       } else {
         enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
       }
-    });
 
-    // check enemy health, remove el if dead
-    activeEnemies.forEach((enemy) => {
+      // remove el if dead
       if (enemy.healthCurrent > 0) return;
-
-      spawnExperienceGem(enemy);
-
       enemy.el?.remove();
       enemiesKilled += 1;
+
+      spawnExperienceGem(enemy);
     });
 
     // remove if health 0 or below
     activeEnemies = activeEnemies.filter((enemy) => enemy.healthCurrent > 0);
+
+    return activeEnemies;
   }
 
   /*
-    Check player overlaps with enemies.
-  */
+   * Check player overlaps with enemies.
+   */
   function checkPlayerHit(): void {
     let isPlayerHit = false;
 
@@ -411,8 +319,8 @@
   }
 
   /*
-    Add new weapons. Remove expired weapons.
-  */
+   * Add new weapons. Remove expired weapons.
+   */
   function checkPlayerWeapons(): void {
     if (!activePlayer) return;
 
@@ -442,7 +350,7 @@
       // make new weapon object
       // structuredClone(weapon) causes error here
       const newWeapon = JSON.parse(JSON.stringify(weapon));
-      newWeapon.el = generateDiv(weapon.sprite);
+      newWeapon.el = generateDiv(weapon.sprite, spawnId);
 
       // add to active weapons
       activeWeapons.push(newWeapon);
@@ -468,8 +376,8 @@
   }
 
   /*
-    Check if player overlaps with xp pickup.
-  */
+   * Check if player overlaps with xp pickup.
+   */
   function checkExperiencePickup(): void {
     activeExperiencePickups.forEach((pickup) => {
       if (!activePlayer.el) {
@@ -490,8 +398,8 @@
   }
 
   /*
-    Check if player has enough xp to level up.
-  */
+   * Check if player has enough xp to level up.
+   */
   function checkLevelUp(): void {
     // max level currently defined
     if (playerLevel >= 10) return;
@@ -505,8 +413,8 @@
   }
 
   /*
-    Check timer, player health.
-  */
+   * Check timer, player health.
+   */
   function checkGameOver(): boolean {
     if (timeElapsed > durationGameEnd) return true;
     if (activePlayer && activePlayer.healthCurrent <= 0) return true;
@@ -515,8 +423,8 @@
   }
 
   /*
-    Trigger game logic.
-  */
+   * Trigger game logic.
+   */
   function gameLoop(timestamp: number) {
     // timestamp: DOMHighResTimeStamp
     // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
@@ -534,7 +442,7 @@
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
-      checkEnemiesHit();
+      activeEnemies = checkEnemiesHit(activeEnemies, activeWeapons);
       checkPlayerHit();
       checkExperiencePickup();
       checkLevelUp();
@@ -545,14 +453,14 @@
   }
 
   /*
-    Make new player object & sprite el on start.
-  */
+   * Make new player object & sprite el on start.
+   */
   function spawnPlayer(): void {
     // make fresh copy of player data, and transfer elPlayer
     activePlayer = structuredClone(player);
 
     // make player sprite
-    const elSprite = generateDiv(activePlayer.sprite);
+    const elSprite = generateDiv(activePlayer.sprite, spawnId);
     activePlayer.el = elSprite;
 
     // add to game
@@ -564,9 +472,9 @@
   }
 
   /*
-    Generate game state.
-    Attached to UI button.
-  */
+   * Generate game state.
+   * Attached to UI button.
+   */
   function startGame(): void {
     // div doesn't exist yet
     if (!elGameWindow) {
@@ -729,11 +637,7 @@
       <div id="menu" class="mx-auto max-w-max bg-gray-900/70 p-2">
         <h2 class="mb-2 text-lg font-bold">Map</h2>
 
-        <img
-          src={terrainForest.imagePath}
-          alt="Minimap of {terrainForest.name} area."
-          class="w-full"
-        />
+        <img src={mapForest.terrain.path} alt="Minimap of {mapForest.name} area." class="w-full" />
       </div>
     {/if}
   </div>
@@ -784,7 +688,7 @@
 {#if !isStarted || isFinished}
   <div
     id="start-screen"
-    class="absolute left-0 top-0 z-50 h-screen w-screen place-items-center content-center space-y-6 bg-rose-950"
+    class="absolute left-0 top-0 z-50 h-screen w-screen place-items-center content-center space-y-6 bg-rose-950/70"
   >
     <h1 class="text-center text-6xl font-extrabold">Svampire Svurvivors</h1>
 
