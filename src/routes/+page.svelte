@@ -2,9 +2,9 @@
   import ControlsKeys from "./ControlsKeys.svelte";
   import ControlsJoystick from "./ControlsJoystick.svelte";
 
-  import { enemyWave, player, terrainForest, playerLevels, pickupXp } from "$lib/definitions";
+  import { enemyWave, player, mapForest, playerLevels, pickupXp } from "$lib/definitions";
 
-  import type { Alive, Sprite, Terrain, Weapon } from "$lib/definitions";
+  import type { Alive, Sprite, WorldMap, Weapon } from "$lib/definitions";
 
   const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
 
@@ -57,16 +57,21 @@
   /*
     Attach `terrain` as backgroundImage for `el`.
   */
-  function setTerrain(el: HTMLDivElement, terrain: Terrain): void {
-    // set dimensions
-    el.style.width = `${terrain.width + (elGameWindow?.clientWidth ?? 0)}px`;
-    el.style.height = `${terrain.height + (elGameWindow?.clientHeight ?? 0)}px`;
+  function setMap(elGameWindow: HTMLDivElement, elTerrain: HTMLDivElement, map: WorldMap): void {
+    // set background tile
+    elGameWindow.style.backgroundImage = `url(${map.background.path})`;
+    elGameWindow.style.backgroundSize = `${map.background.width}px ${map.background.height}px`;
+    elGameWindow.style.backgroundRepeat = "repeat";
 
-    // set background
-    el.style.backgroundImage = `url(${terrain.imagePath})`;
-    el.style.backgroundSize = `${terrain.width}px ${terrain.height}px`;
-    el.style.backgroundRepeat = "no-repeat";
-    el.style.backgroundPosition = "center";
+    // set terrain dimensions
+    elTerrain.style.width = `${map.terrain.width + elGameWindow.clientWidth}px`;
+    elTerrain.style.height = `${map.terrain.height + elGameWindow.clientHeight}px`;
+
+    // set terrain background
+    elTerrain.style.backgroundImage = `url(${map.terrain.path})`;
+    elTerrain.style.backgroundSize = `${map.terrain.width}px ${map.terrain.height}px`;
+    elTerrain.style.backgroundRepeat = "no-repeat";
+    elTerrain.style.backgroundPosition = "center";
   }
 
   /*
@@ -590,7 +595,7 @@
     // elGameWindow.requestFullscreen();
 
     // set map
-    setTerrain(elTerrain, terrainForest);
+    setMap(elGameWindow, elTerrain, mapForest);
 
     const top = (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2;
     const left = (elGameWindow.scrollWidth - elGameWindow.clientWidth) / 2;

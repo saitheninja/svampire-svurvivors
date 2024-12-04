@@ -1,0 +1,42 @@
+<svg viewBox="0 0 50 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" gradientTransform="rotate(90)">
+      <stop offset="10%" stop-color="gold" />
+      <stop offset="75%" stop-color="red" />
+      </linearGradient>
+    </defs>
+
+  <g id="tree">
+    <rect
+      id="trunk"
+      fill="#634545"
+      x="40%"
+      y="60%"
+      width="20%"
+      height="40%"
+      rx="5%"
+      ry="1%"
+      />
+
+    <path
+      id="leaves"
+      d="M -25,160
+             h 100
+             L 25,10
+             z"
+      />
+    <use
+      href="#leaves"
+      stroke="green"
+      stroke-width="2"
+      stroke-linejoin="round"
+      stroke-opacity="0.5"
+      fill="#336A52"
+      />
+    <use
+      href="#leaves"
+      fill="url(#gradient)"
+      opacity="0.2"
+      />
+    </g>
+  </svg>
