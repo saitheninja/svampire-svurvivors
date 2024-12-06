@@ -11,7 +11,7 @@
     setMap,
   } from "./engine";
 
-  import type { Alive, Weapon } from "./engine";
+  import type { GameObject, Alive, Weapon } from "./engine";
 
   const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
 
@@ -20,9 +20,9 @@
   const slotsAccessories = 6;
 
   // current game state
-  let elGameWindow: HTMLDivElement | undefined = $state();
-  let elTerrain: HTMLDivElement | undefined = $state();
-  let elPlayer: HTMLDivElement | undefined = $state();
+  let elGameWindow: HTMLElement | undefined = $state();
+  let elTerrain: HTMLElement | undefined = $state();
+  let elPlayer: HTMLElement | undefined = $state();
 
   let isStarted = $state(false);
   let isFinished = $state(false);
@@ -34,7 +34,7 @@
   let activeEnemies: Alive[] = $state([]);
   let activePlayer: Alive = $state(structuredClone(player));
   let activeWeapons: Weapon[] = $state([]);
-  let activeExperiencePickups: HTMLElement[] = $state([]);
+  let activeXpPickups: GameObject[] = $state([]);
 
   let healthPercent = $derived(
     Math.round((activePlayer.healthCurrent / activePlayer.healthMax) * 100),
@@ -215,24 +215,33 @@
   /*
    * Spawn experience pickup. Called when enemy is killed.
    */
-  function spawnExperienceGem(enemy: Alive): void {
+  function spawnPickupXp(
+    activeXpPickups: GameObject[],
+    elTerrain: HTMLElement,
+    enemy: Alive,
+  ): GameObject[] {
     if (!elTerrain) {
       console.error(`No div with id "terrain".`);
-      return;
+      return activeXpPickups;
     }
     if (!enemy.el) {
       console.error(`No enemy el.`);
-      return;
+      return activeXpPickups;
     }
 
-    const el = generateDiv(pickupXp, spawnId);
+    const newPickupXp = structuredClone(pickupXp);
+    const el = generateDiv(newPickupXp.sprite, spawnId);
 
     el.style.left = enemy.el.style.left;
     el.style.top = enemy.el.style.top;
     el.style.rotate = "45deg"; // point at top
 
-    activeExperiencePickups.push(el);
+    newPickupXp.el = el;
+
     elTerrain.appendChild(el);
+    activeXpPickups.push();
+
+    return activeXpPickups;
   }
 
   /*
@@ -260,14 +269,18 @@
 
       if (enemy.healthCurrent > 0) return;
 
+      enemiesKilled += 1;
+
       // remove enemy sprite
       enemy.el?.remove();
       // remove enemy weapons sprites
       enemy.weapons.forEach((weapon) => weapon.el?.remove());
 
-      spawnExperienceGem(enemy);
-
-      enemiesKilled += 1;
+      if (!elTerrain) {
+        console.error(`No div with id "terrain".`);
+        return;
+      }
+      activeXpPickups = spawnXpPickup(activeXpPickups, elTerrain, enemy);
     });
 
     // filter out dead enemies
@@ -336,22 +349,24 @@
   /*
    * Check if player overlaps with xp pickup.
    */
-  function checkExperiencePickup(): void {
-    activeExperiencePickups.forEach((pickup) => {
+  function checkXpPickups(): void {
+    activeXpPickups.forEach((pickup) => {
+      if (!pickup.el) {
+        console.error("No pickupXp el.");
+        return;
+      }
       if (!activePlayer.el) {
         console.error("No activePlayer el.");
         return;
       }
 
-      // check if player collides
-      const isCollidingPlayer = isColliding(pickup, activePlayer.el);
-      if (!isCollidingPlayer) return;
+      if (!isColliding(pickup.el, activePlayer.el)) return;
 
       // add to total xp
-      playerLevelXp += 1;
+      playerLevelXp = playerLevelXp + 1; // pickup.value;
 
       // remove el
-      pickup.remove();
+      pickup.el?.remove();
     });
   }
 
@@ -402,7 +417,7 @@
       moveEnemies();
       activeEnemies = checkCollisionsOnEnemies(activeEnemies, activeWeapons);
       activePlayer = checkCollisionsOnPlayer(activePlayer, activeEnemies);
-      checkExperiencePickup();
+      checkXpPickups();
       checkLevelUp();
     }
 

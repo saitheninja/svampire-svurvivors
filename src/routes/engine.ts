@@ -24,7 +24,7 @@ export interface Sprite {
   width: number; // px
 }
 
-interface GameObject {
+export interface GameObject {
   name: string;
   sprite: Sprite;
   el?: HTMLDivElement;
@@ -161,11 +161,7 @@ export function roundTo3Places(n: number): number {
 /*
  * Attach `terrain` as backgroundImage for `el`.
  */
-export function setMap(
-  elGameWindow: HTMLDivElement,
-  elTerrain: HTMLDivElement,
-  map: WorldMap,
-): void {
+export function setMap(elGameWindow: HTMLElement, elTerrain: HTMLElement, map: WorldMap): void {
   // set background tile
   elGameWindow.style.backgroundImage = `url(${map.background.path})`;
   elGameWindow.style.backgroundSize = `${map.background.width}px ${map.background.height}px`;

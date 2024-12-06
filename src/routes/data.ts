@@ -1,4 +1,4 @@
-import type { WorldMap, Sprite, Alive, Weapon } from "./engine";
+import type { WorldMap, GameObject, Alive, Weapon } from "./engine";
 
 export const mapForest: WorldMap = {
   name: "forest",
@@ -154,15 +154,18 @@ export const playerLevels: PlayerLevel[] = [
 ];
 // on level up, choose upgrade
 
-export const pickupXp: Sprite = {
+export const pickupXp: GameObject = {
   name: "experience-gem",
-  colorBg: "rgb(139 92 246)", // bg-violet-500
-  colorHit: "rgb(196 181 253)", // bg-violet-300
-  // emoji: "🟪", "🟦", "🟩", "🟥"
-  emoji: "🟪",
-  fontSize: 20,
-  width: 20,
-  height: 20,
+  sprite: {
+    name: "experience-gem",
+    colorBg: "rgb(139 92 246)", // bg-violet-500
+    colorHit: "rgb(196 181 253)", // bg-violet-300
+    // emoji: "🟪", "🟦", "🟩", "🟥"
+    emoji: "🟪",
+    fontSize: 20,
+    width: 20,
+    height: 20,
+  },
 };
 
 // accessoryLuck: "🍀"
