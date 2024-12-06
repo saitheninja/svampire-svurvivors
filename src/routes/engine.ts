@@ -48,9 +48,9 @@ export interface Alive extends GameObject {
 }
 
 /*
- * Check if div bounding boxes overlap.
+ * Check if el1, el2 bounding boxes overlap.
  */
-export function isCollidingCheck(el1: HTMLElement, el2: HTMLElement): boolean {
+export function isColliding(el1: HTMLElement, el2: HTMLElement): boolean {
   const rect1 = el1.getBoundingClientRect();
   const rect2 = el2.getBoundingClientRect();
 
@@ -63,6 +63,45 @@ export function isCollidingCheck(el1: HTMLElement, el2: HTMLElement): boolean {
     isNotCollidingBottom || isNotCollidingTop || isNotCollidingRight || isNotCollidingLeft;
 
   return !notColliding;
+}
+
+/*
+ * If player sprite overlaps with enemy sprite or enemy weapon sprite:
+ * - take damage,
+ * - change sprite background-color.
+ */
+export function checkCollisionsOnPlayer(activePlayer: Alive, activeEnemies: Alive[]): Alive {
+  if (!activePlayer.el) {
+    console.error("No activePlayer el.");
+    return activePlayer;
+  }
+
+  // if hit by any enemy, change background-color
+  activePlayer.el.style.backgroundColor = activePlayer.sprite.colorBg.replace(")", " / 0.5)");
+
+  activeEnemies.forEach((enemy) => {
+    if (!enemy.el) return;
+    if (!activePlayer.el) return;
+
+    enemy.weapons.forEach((weapon) => {
+      if (!weapon.el) return;
+      if (!activePlayer.el) return;
+
+      // if player not hit by weapon
+      if (!isColliding(weapon.el, activePlayer.el)) return;
+
+      activePlayer.healthCurrent = activePlayer.healthCurrent - weapon.damage;
+      activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
+    });
+
+    // if player not hit by enemy sprite
+    if (!isColliding(enemy.el, activePlayer.el)) return;
+
+    activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
+    activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
+  });
+
+  return activePlayer;
 }
 
 /*

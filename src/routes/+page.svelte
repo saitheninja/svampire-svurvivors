@@ -3,7 +3,13 @@
   import ControlsKeys from "./ControlsKeys.svelte";
 
   import { enemyWave, player, mapForest, playerLevels, pickupXp } from "./data";
-  import { generateDiv, isCollidingCheck, roundTo3Places, setMap } from "./engine";
+  import {
+    isColliding,
+    checkCollisionsOnPlayer,
+    generateDiv,
+    roundTo3Places,
+    setMap,
+  } from "./engine";
 
   import type { Alive, Weapon } from "./engine";
 
@@ -182,7 +188,7 @@
       el.style.top = `${topMove}px`;
 
       // if new position will overlap with another enemy, move back to original position
-      let isColliding = false;
+      let isOccupied = false;
 
       for (let i2 = 0; i2 < activeEnemies.length; i2++) {
         // same enemy
@@ -191,14 +197,14 @@
         const elOther = activeEnemies[i2].el;
         if (!elOther) continue;
 
-        const check = isCollidingCheck(el, elOther);
+        const check = isColliding(el, elOther);
         if (!check) continue;
 
-        isColliding = true;
+        isOccupied = true;
         break;
       }
 
-      if (!isColliding) return;
+      if (!isOccupied) return;
 
       // move el back to original position
       el.style.left = `${left}px`;
@@ -232,90 +238,42 @@
   /*
    * Check enemies overlap with player weapons.
    */
-  function checkEnemiesHit(activeEnemies: Alive[], activeWeapons: Weapon[]): Alive[] {
+  function checkCollisionsOnEnemies(activeEnemies: Alive[], activeWeapons: Weapon[]): Alive[] {
     // check if enemy hit by player weapons
     activeEnemies.forEach((enemy) => {
       if (!enemy.el) return;
-
-      let isEnemyHit = false;
+      enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
 
       activeWeapons.forEach((weapon) => {
         if (!weapon.el) return;
         if (!enemy.el) return;
 
-        // check collision
-        const isCollidingWeapon = isCollidingCheck(weapon.el, enemy.el);
-
-        // if no weapons hit
-        if (!isCollidingWeapon) return;
+        // check collision with player weapon
+        if (!isColliding(weapon.el, enemy.el)) return;
 
         // change background
-        isEnemyHit = true;
+        enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
 
         // take damage
         enemy.healthCurrent = enemy.healthCurrent - weapon.damage;
       });
 
-      // change enemy bg
-      if (!isEnemyHit) {
-        enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
-      } else {
-        enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
-      }
-
-      // remove el if dead
       if (enemy.healthCurrent > 0) return;
+
+      // remove enemy sprite
       enemy.el?.remove();
-      enemiesKilled += 1;
+      // remove enemy weapons sprites
+      enemy.weapons.forEach((weapon) => weapon.el?.remove());
 
       spawnExperienceGem(enemy);
+
+      enemiesKilled += 1;
     });
 
-    // remove if health 0 or below
+    // filter out dead enemies
     activeEnemies = activeEnemies.filter((enemy) => enemy.healthCurrent > 0);
 
     return activeEnemies;
-  }
-
-  /*
-   * Check player overlaps with enemies.
-   */
-  function checkPlayerHit(): void {
-    let isPlayerHit = false;
-
-    activeEnemies.forEach((enemy) => {
-      if (!enemy.el) {
-        console.error("No enemy el.");
-        return;
-      }
-      if (!activePlayer.el) {
-        console.error("No activePlayer el.");
-        return;
-      }
-
-      // check if player hit by enemy
-      const isCollidingPlayer = isCollidingCheck(enemy.el, activePlayer.el);
-
-      // if no enemies hit player
-      if (!isCollidingPlayer) return;
-
-      // if hit, change background
-      isPlayerHit = true;
-
-      // take damage
-      activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
-    });
-
-    // change player bg
-    if (!activePlayer.el) {
-      console.error("No activePlayer el.");
-      return;
-    }
-    if (!isPlayerHit) {
-      activePlayer.el.style.backgroundColor = player.sprite.colorBg.replace(")", " / 0.5)");
-    } else {
-      activePlayer.el.style.backgroundColor = player.sprite.colorHit.replace(")", " / 0.5)");
-    }
   }
 
   /*
@@ -386,7 +344,7 @@
       }
 
       // check if player collides
-      const isCollidingPlayer = isCollidingCheck(pickup, activePlayer.el);
+      const isCollidingPlayer = isColliding(pickup, activePlayer.el);
       if (!isCollidingPlayer) return;
 
       // add to total xp
@@ -442,8 +400,8 @@
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
-      activeEnemies = checkEnemiesHit(activeEnemies, activeWeapons);
-      checkPlayerHit();
+      activeEnemies = checkCollisionsOnEnemies(activeEnemies, activeWeapons);
+      activePlayer = checkCollisionsOnPlayer(activePlayer, activeEnemies);
       checkExperiencePickup();
       checkLevelUp();
     }
