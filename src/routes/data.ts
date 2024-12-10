@@ -1,5 +1,6 @@
 import type { WorldMap, GameObject, Alive, Weapon } from "./engine";
 
+// maps
 export const mapForest: WorldMap = {
   name: "forest",
   terrain: {
@@ -14,13 +15,12 @@ export const mapForest: WorldMap = {
   },
 };
 
+// player weapons
 const weaponWhip: Weapon = {
   name: "whip",
   damage: 2,
-  durationActive: 1000,
-  durationActiveElapsed: 0,
-  durationCooldown: 2000,
-  durationCooldownElapsed: 0,
+  durationActive: {max: 1000, current: 0},
+  durationCooldown: {max: 2000, current: 0},
   sprite: {
     name: "whip",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -34,10 +34,8 @@ const weaponWhip: Weapon = {
 const weaponSword: Weapon = {
   name: "sword",
   damage: 4,
-  durationActive: 2000,
-  durationActiveElapsed: 0,
-  durationCooldown: 5000,
-  durationCooldownElapsed: 0,
+  durationActive: {max: 2000, current: 0},
+  durationCooldown: {max: 5000, current: 0},
   sprite: {
     name: "sword",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -48,15 +46,16 @@ const weaponSword: Weapon = {
     height: 48,
   },
 };
+// weaponBoomerang: "🪃"
+// weaponAxe: "🪓"
+export const weaponsPlayerAll = [weaponWhip, weaponSword];
 
-const weaponsAll: Weapon[] = [weaponWhip, weaponSword];
 
 export const player: Alive = {
   name: "player",
-  healthCurrent: 100,
-  healthMax: 100,
+  health: {max: 100, current: 0},
   speed: 1,
-  weapons: [...weaponsAll],
+  weapons: [...weaponsPlayerAll],
   sprite: {
     name: "player",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -68,10 +67,10 @@ export const player: Alive = {
   },
 };
 
+// enemies
 const enemySkeleton: Alive = {
   name: "skeleton",
-  healthCurrent: 1,
-  healthMax: 1,
+  health: {max: 1, current: 0},
   speed: 0.1,
   weapons: [],
   sprite: {
@@ -86,8 +85,7 @@ const enemySkeleton: Alive = {
 };
 const enemyZombie: Alive = {
   name: "zombie",
-  healthCurrent: 4,
-  healthMax: 4,
+  health: {max: 1, current: 0},
   speed: 0.1,
   weapons: [],
   sprite: {
@@ -102,8 +100,7 @@ const enemyZombie: Alive = {
 };
 const enemyGoblin: Alive = {
   name: "goblin",
-  healthCurrent: 100,
-  healthMax: 100,
+  health: {max: 100, current: 0},
   speed: 0.05,
   weapons: [],
   sprite: {
@@ -111,15 +108,15 @@ const enemyGoblin: Alive = {
     colorBg: "rgb(239 68 68)", // bg-red-500
     colorHit: "rgb(252 165 165)", // bg-red-300
     emoji: "👺",
-    fontSize: 80,
-    width: 80,
-    height: 80,
+    fontSize: 64,
+    width: 64,
+    height: 64,
   },
 };
-// Witch
-// Dog
-// Dragonfly
-
+// enemyWitch
+// enemyDog
+// enemyDragonfly
+// enemyOgre: "👹"
 export const enemyWave: Alive[] = [
   enemySkeleton,
   enemySkeleton,
@@ -174,6 +171,3 @@ export const pickupXp: GameObject = {
 // pickupHealthLarge: "🍖"
 // pickupGoldCoin: "🪙"
 // pickupGoldBag: "💰"
-// weaponBoomerang: "🪃"
-// weaponAxe: "🪓"
-// enemyOgre: "👹"

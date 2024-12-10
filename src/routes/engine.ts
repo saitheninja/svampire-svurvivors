@@ -1,18 +1,14 @@
 // map
-
 interface ImageSvg {
   path: string;
   height: number;
   width: number;
 }
-
 export interface WorldMap {
   name: string;
   terrain: ImageSvg;
   background: ImageSvg; // tiling sprite
 }
-
-// sprites
 
 export interface Sprite {
   name: string;
@@ -24,6 +20,11 @@ export interface Sprite {
   width: number; // px
 }
 
+export interface Countdown {
+  max: number;
+  current: number; // minimum 0
+}
+
 export interface GameObject {
   name: string;
   sprite: Sprite;
@@ -32,17 +33,14 @@ export interface GameObject {
 
 export interface Weapon extends GameObject {
   damage: number;
-  durationActive: number; // milliseconds
-  durationActiveElapsed: number;
-  durationCooldown: number;
-  durationCooldownElapsed: number;
+  durationActive: Countdown; // milliseconds
+  durationCooldown: Countdown; // milliseconds
   // levelCurrent: number;
   // levelMax: number;
 }
 
 export interface Alive extends GameObject {
-  healthCurrent: number;
-  healthMax: number;
+  health: Countdown; // need max for level up, accesory effects, etc.
   speed: number;
   weapons: Weapon[];
 }
@@ -90,14 +88,14 @@ export function checkCollisionsOnPlayer(activePlayer: Alive, activeEnemies: Aliv
       // if player not hit by weapon
       if (!isColliding(weapon.el, activePlayer.el)) return;
 
-      activePlayer.healthCurrent = activePlayer.healthCurrent - weapon.damage;
+      activePlayer.health.current = activePlayer.health.current - weapon.damage;
       activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
     });
 
     // if player not hit by enemy sprite
     if (!isColliding(enemy.el, activePlayer.el)) return;
 
-    activePlayer.healthCurrent = activePlayer.healthCurrent - 1;
+    activePlayer.health.current = activePlayer.health.current - 1;
     activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
   });
 

@@ -37,7 +37,7 @@
   let activeXpPickups: GameObject[] = $state([]);
 
   let healthPercent = $derived(
-    Math.round((activePlayer.healthCurrent / activePlayer.healthMax) * 100),
+    Math.round((activePlayer.health.current / activePlayer.health.max) * 100),
   );
 
   let playerLevel = $state(1);
@@ -264,10 +264,10 @@
         enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
 
         // take damage
-        enemy.healthCurrent = enemy.healthCurrent - weapon.damage;
+        enemy.health.current = enemy.health.current - weapon.damage;
       });
 
-      if (enemy.healthCurrent > 0) return;
+      if (enemy.health.current > 0) return;
 
       enemiesKilled += 1;
 
@@ -285,7 +285,7 @@
     });
 
     // filter out dead enemies
-    activeEnemies = activeEnemies.filter((enemy) => enemy.healthCurrent > 0);
+    activeEnemies = activeEnemies.filter((enemy) => enemy.health.current > 0);
 
     return activeEnemies;
   }
@@ -298,26 +298,26 @@
 
     // remove elements of expired weapons
     activeWeapons.forEach((weapon) => {
-      weapon.durationActiveElapsed += timeSincePrevFrame;
+      weapon.durationActive.current += timeSincePrevFrame;
 
-      if (weapon.durationActiveElapsed < weapon.durationActive) return;
+      if (weapon.durationActive.current < weapon.durationActive.max) return;
       weapon.el?.remove();
     });
 
     // remove expired weapons from tracking list
     activeWeapons = activeWeapons.filter(
-      (weapon) => weapon.durationActiveElapsed < weapon.durationActive,
+      (weapon) => weapon.durationActive.current < weapon.durationActive.max,
     );
 
     // add new weapons
     activePlayer.weapons.forEach((weapon) => {
-      weapon.durationCooldownElapsed += timeSincePrevFrame;
+      weapon.durationCooldown.current += timeSincePrevFrame;
 
       // if still on cooldown
-      if (weapon.durationCooldownElapsed < weapon.durationCooldown) return;
+      if (weapon.durationCooldown.current < weapon.durationCooldown.max) return;
 
       // reset cooldown
-      weapon.durationCooldownElapsed = 0;
+      weapon.durationCooldown.current = 0;
 
       // make new weapon object
       // structuredClone(weapon) causes error here
@@ -391,7 +391,7 @@
    */
   function checkGameOver(): boolean {
     if (timeElapsed > durationGameEnd) return true;
-    if (activePlayer && activePlayer.healthCurrent <= 0) return true;
+    if (activePlayer && activePlayer.health.current <= 0) return true;
 
     return false;
   }
@@ -647,7 +647,7 @@
       <div id="health-bar-text" class="sr-only flex flex-row gap-2">
         <span>health:</span>
         <span>{healthPercent}%</span>
-        <span>{activePlayer.healthCurrent} / {activePlayer.healthMax}</span>
+        <span>{activePlayer.health.current} / {activePlayer.health.max}</span>
       </div>
 
       <div id="health-bar-percent" class="flex h-2 flex-row bg-gray-900">
