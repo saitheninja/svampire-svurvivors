@@ -1,4 +1,5 @@
 <script lang="ts">
+// https://coherent-labs.com/blog/uitutorials/virtual-joystick/
   let {
     joystickAngle = $bindable(0),
     joystickTiltRatio = $bindable(0),

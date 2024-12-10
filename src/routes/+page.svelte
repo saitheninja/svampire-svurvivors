@@ -271,16 +271,17 @@
 
       enemiesKilled += 1;
 
-      // remove enemy sprite
-      enemy.el?.remove();
       // remove enemy weapons sprites
       enemy.weapons.forEach((weapon) => weapon.el?.remove());
+
+      // remove enemy sprite
+      enemy.el?.remove();
 
       if (!elTerrain) {
         console.error(`No div with id "terrain".`);
         return;
       }
-      activeXpPickups = spawnXpPickup(activeXpPickups, elTerrain, enemy);
+      activeXpPickups = spawnPickupXp(activeXpPickups, elTerrain, enemy);
     });
 
     // filter out dead enemies
