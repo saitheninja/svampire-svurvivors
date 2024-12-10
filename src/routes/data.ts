@@ -50,6 +50,52 @@ const weaponSword: Weapon = {
 // weaponAxe: "🪓"
 export const weaponsPlayerAll = [weaponWhip, weaponSword];
 
+// enemy weapons
+const weaponSkeletonBody: Weapon = {
+  name: "skeleton-body",
+  damage: 1,
+  durationActive: {max: 2000, current: 0},
+  durationCooldown: {max: 5000, current: 0},
+  sprite: {
+    name: "skeleton-body",
+    colorBg: "rgb(30 58 138)", // bg-blue-900
+    colorHit: "rgb(147 197 253)", // bg-blue-300
+    emoji: "",
+    fontSize: 48,
+    width: 48,
+    height: 48,
+  },
+};
+const weaponZombieBody: Weapon = {
+  name: "zombie-body",
+  damage: 1,
+  durationActive: {max: 2000, current: 0},
+  durationCooldown: {max: 5000, current: 0},
+  sprite: {
+    name: "zombie-body",
+    colorBg: "rgb(30 58 138)", // bg-blue-900
+    colorHit: "rgb(147 197 253)", // bg-blue-300
+    emoji: "",
+    fontSize: 48,
+    width: 48,
+    height: 48,
+  },
+};
+const weaponGoblinBody: Weapon = {
+  name: "skeleton-body",
+  damage: 1,
+  durationActive: {max: 2000, current: 0},
+  durationCooldown: {max: 5000, current: 0},
+  sprite: {
+    name: "whip",
+    colorBg: "rgb(30 58 138)", // bg-blue-900
+    colorHit: "rgb(147 197 253)", // bg-blue-300
+    emoji: "",
+    fontSize: 64,
+    width: 64,
+    height: 64,
+  },
+};
 
 export const player: Alive = {
   name: "player",
@@ -72,7 +118,7 @@ const enemySkeleton: Alive = {
   name: "skeleton",
   health: {max: 1, current: 0},
   speed: 0.1,
-  weapons: [],
+  weapons: [weaponSkeletonBody],
   sprite: {
     name: "skeleton",
     colorBg: "rgb(132 204 22)", // bg-lime-500
@@ -87,7 +133,7 @@ const enemyZombie: Alive = {
   name: "zombie",
   health: {max: 1, current: 0},
   speed: 0.1,
-  weapons: [],
+  weapons: [weaponZombieBody],
   sprite: {
     name: "zombie",
     colorBg: "rgb(132 204 22)", // bg-lime-500
@@ -102,7 +148,7 @@ const enemyGoblin: Alive = {
   name: "goblin",
   health: {max: 100, current: 0},
   speed: 0.05,
-  weapons: [],
+  weapons: [weaponGoblinBody],
   sprite: {
     name: "goblin",
     colorBg: "rgb(239 68 68)", // bg-red-500
