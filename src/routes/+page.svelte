@@ -15,10 +15,6 @@
 
   const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
 
-  // when filled, treasure chests won't offer that type
-  const slotsWeapons = 6;
-  const slotsAccessories = 6;
-
   // current game state
   let elGameWindow: HTMLElement | undefined = $state();
   let elTerrain: HTMLElement | undefined = $state();
@@ -541,14 +537,14 @@
         </div>
 
         <div class="flex flex-row gap-1">
-          {#each Array(slotsWeapons) as slot, i}
-            <span class="w-6 border-2 border-white/30">{slot}{i}</span>
+          {#each Array(player.capacityWeapons) as slot, i}
+            <span class="w-6 border-2 border-white/30">{slot}{i + 1}</span>
           {/each}
         </div>
 
         <div class="flex flex-row gap-1">
-          {#each Array(slotsAccessories) as slot, i}
-            <span class="w-6 border-2 border-dotted border-white/30">{slot}{i}</span>
+          {#each Array(player.capacityAccessories) as slot, i}
+            <span class="w-6 border-2 border-dotted border-white/30">{slot}{i + 1}</span>
           {/each}
         </div>
       </div>

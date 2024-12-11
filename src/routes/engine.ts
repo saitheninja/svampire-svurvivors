@@ -43,6 +43,8 @@ export interface Weapon extends GameObject {
 }
 
 export interface Alive extends GameObject {
+  capacityAccessories: number; // default 6
+  capacityWeapons: number; // default 6
   health: NumberRange; // need max for level up, accesory effects, etc.
   speed: number;
   weapons: Weapon[];

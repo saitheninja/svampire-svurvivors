@@ -99,6 +99,8 @@ const weaponGoblinBody: Weapon = {
 
 export const player: Alive = {
   name: "player",
+  capacityAccessories: 6,
+  capacityWeapons: 6,
   health: { min: 0, max: 100, current: 100 },
   speed: 1,
   weapons: [...weaponsPlayerAll],
@@ -116,6 +118,8 @@ export const player: Alive = {
 // enemies
 const enemySkeleton: Alive = {
   name: "skeleton",
+  capacityAccessories: 6,
+  capacityWeapons: 6,
   health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
   weapons: [weaponSkeletonBody],
@@ -131,6 +135,8 @@ const enemySkeleton: Alive = {
 };
 const enemyZombie: Alive = {
   name: "zombie",
+  capacityAccessories: 6,
+  capacityWeapons: 6,
   health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
   weapons: [weaponZombieBody],
@@ -146,6 +152,8 @@ const enemyZombie: Alive = {
 };
 const enemyGoblin: Alive = {
   name: "goblin",
+  capacityAccessories: 6,
+  capacityWeapons: 6,
   health: { min: 0, max: 100, current: 100 },
   speed: 0.05,
   weapons: [weaponGoblinBody],
