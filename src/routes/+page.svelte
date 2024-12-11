@@ -267,7 +267,7 @@
         enemy.health.current = enemy.health.current - weapon.damage;
       });
 
-      if (enemy.health.current > 0) return;
+      if (enemy.health.current > enemy.health.min) return;
 
       enemiesKilled += 1;
 
@@ -390,8 +390,11 @@
    * Check timer, player health.
    */
   function checkGameOver(): boolean {
-    if (timeElapsed > durationGameEnd) return true;
-    if (activePlayer && activePlayer.health.current <= 0) return true;
+    // time up
+    if (activeRound.durationTimer.current > activeRound.durationTimer.max) return true;
+
+    // out of health
+    if (activePlayer.health.current <= activePlayer.health.min) return true;
 
     return false;
   }
@@ -412,7 +415,7 @@
     if (isFinished) return;
 
     if (!isPaused) {
-      timeElapsed += timeSincePrevFrame;
+      activeRound.durationTimer.current += timeSincePrevFrame;
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
@@ -466,7 +469,6 @@
     isFinished = false;
     isStarted = true; // hide info el, use joystick
     isPaused = false;
-    timeElapsed = 0; // reset timer// reset timer
     enemiesKilled = 0;
     spawnId = 0;
     playerLevelXp = 0;

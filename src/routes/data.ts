@@ -19,8 +19,8 @@ export const mapForest: WorldMap = {
 const weaponWhip: Weapon = {
   name: "whip",
   damage: 2,
-  durationActive: {max: 1000, current: 0},
-  durationCooldown: {max: 2000, current: 0},
+  durationActive: { min: 0, max: 1000, current: 0 },
+  durationCooldown: { min: 0, max: 2000, current: 0 },
   sprite: {
     name: "whip",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -34,8 +34,8 @@ const weaponWhip: Weapon = {
 const weaponSword: Weapon = {
   name: "sword",
   damage: 4,
-  durationActive: {max: 2000, current: 0},
-  durationCooldown: {max: 5000, current: 0},
+  durationActive: { min: 0, max: 2000, current: 0 },
+  durationCooldown: { min: 0, max: 5000, current: 0 },
   sprite: {
     name: "sword",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -54,8 +54,8 @@ export const weaponsPlayerAll = [weaponWhip, weaponSword];
 const weaponSkeletonBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
-  durationActive: {max: 2000, current: 0},
-  durationCooldown: {max: 5000, current: 0},
+  durationActive: { min: 0, max: 2000, current: 0 },
+  durationCooldown: { min: 0, max: 5000, current: 0 },
   sprite: {
     name: "skeleton-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -69,8 +69,8 @@ const weaponSkeletonBody: Weapon = {
 const weaponZombieBody: Weapon = {
   name: "zombie-body",
   damage: 1,
-  durationActive: {max: 2000, current: 0},
-  durationCooldown: {max: 5000, current: 0},
+  durationActive: { min: 0, max: 2000, current: 0 },
+  durationCooldown: { min: 0, max: 5000, current: 0 },
   sprite: {
     name: "zombie-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -84,8 +84,8 @@ const weaponZombieBody: Weapon = {
 const weaponGoblinBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
-  durationActive: {max: 2000, current: 0},
-  durationCooldown: {max: 5000, current: 0},
+  durationActive: { min: 0, max: 2000, current: 0 },
+  durationCooldown: { min: 0, max: 5000, current: 0 },
   sprite: {
     name: "whip",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -99,7 +99,7 @@ const weaponGoblinBody: Weapon = {
 
 export const player: Alive = {
   name: "player",
-  health: {max: 100, current: 0},
+  health: { min: 0, max: 100, current: 100 },
   speed: 1,
   weapons: [...weaponsPlayerAll],
   sprite: {
@@ -116,7 +116,7 @@ export const player: Alive = {
 // enemies
 const enemySkeleton: Alive = {
   name: "skeleton",
-  health: {max: 1, current: 0},
+  health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
   weapons: [weaponSkeletonBody],
   sprite: {
@@ -131,7 +131,7 @@ const enemySkeleton: Alive = {
 };
 const enemyZombie: Alive = {
   name: "zombie",
-  health: {max: 1, current: 0},
+  health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
   weapons: [weaponZombieBody],
   sprite: {
@@ -146,7 +146,7 @@ const enemyZombie: Alive = {
 };
 const enemyGoblin: Alive = {
   name: "goblin",
-  health: {max: 100, current: 0},
+  health: { min: 0, max: 100, current: 100 },
   speed: 0.05,
   weapons: [weaponGoblinBody],
   sprite: {

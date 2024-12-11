@@ -20,9 +20,12 @@ export interface Sprite {
   width: number; // px
 }
 
-export interface Countdown {
+export interface NumberRange {
+  min: number;
   max: number;
-  current: number; // minimum 0
+  current: number;
+}
+
 }
 
 export interface GameObject {
@@ -33,14 +36,14 @@ export interface GameObject {
 
 export interface Weapon extends GameObject {
   damage: number;
-  durationActive: Countdown; // milliseconds
-  durationCooldown: Countdown; // milliseconds
+  durationActive: NumberRange; // milliseconds
+  durationCooldown: NumberRange; // milliseconds
   // levelCurrent: number;
   // levelMax: number;
 }
 
 export interface Alive extends GameObject {
-  health: Countdown; // need max for level up, accesory effects, etc.
+  health: NumberRange; // need max for level up, accesory effects, etc.
   speed: number;
   weapons: Weapon[];
 }
