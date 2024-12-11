@@ -1,4 +1,4 @@
-import type { WorldMap, GameObject, Alive, Weapon } from "./engine";
+import type { GameRound, WorldMap, GameObject, Alive, Weapon } from "./engine";
 
 // maps
 export const mapForest: WorldMap = {
@@ -55,7 +55,7 @@ const weaponSkeletonBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
   durationActive: { min: 0, max: 2000, current: 0 },
-  durationCooldown: { min: 0, max: 5000, current: 0 },
+  durationCooldown: { min: 0, max: 0, current: 0 },
   sprite: {
     name: "skeleton-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -70,7 +70,7 @@ const weaponZombieBody: Weapon = {
   name: "zombie-body",
   damage: 1,
   durationActive: { min: 0, max: 2000, current: 0 },
-  durationCooldown: { min: 0, max: 5000, current: 0 },
+  durationCooldown: { min: 0, max: 0, current: 0 },
   sprite: {
     name: "zombie-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -85,7 +85,7 @@ const weaponGoblinBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
   durationActive: { min: 0, max: 2000, current: 0 },
-  durationCooldown: { min: 0, max: 5000, current: 0 },
+  durationCooldown: { min: 0, max: 0, current: 0 },
   sprite: {
     name: "whip",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -171,7 +171,7 @@ const enemyGoblin: Alive = {
 // enemyDog
 // enemyDragonfly
 // enemyOgre: "👹"
-export const enemyWave: Alive[] = [
+const enemyWave: Alive[] = [
   enemySkeleton,
   enemySkeleton,
   enemySkeleton,
@@ -185,6 +185,19 @@ export const enemyWave: Alive[] = [
   enemyZombie,
   enemyZombie,
 ];
+
+// game rounds
+export const gameRound1: GameRound = {
+  enemyWaves: [enemyWave],
+  durationTimer: {
+    min: 0,
+    max: 30 * 60 * 1000, // minutes * seconds * milliseconds
+    current: 0,
+  },
+  map: mapForest,
+
+  logs: { spawns: [], enemiesKilled: [] },
+};
 
 interface PlayerLevel {
   level: number;

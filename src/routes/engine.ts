@@ -26,6 +26,32 @@ export interface NumberRange {
   current: number;
 }
 
+interface LogEvent {
+  durationTimer: NumberRange;
+  message: string;
+  timestamp: Date;
+  type: "Spawn" | "Kill" | "Pickup" | "LevelUp";
+}
+export interface LogEventKill extends LogEvent {
+  type: "Kill";
+  enemy: Alive;
+  weapon: Weapon;
+}
+interface LogEventSpawn extends LogEvent {
+  type: "Spawn";
+  sprite: Sprite;
+  uuid: string;
+}
+
+export interface GameRound {
+  durationTimer: NumberRange; // milliseconds
+  enemyWaves: Alive[][];
+  map: WorldMap;
+
+  logs: {
+    spawns: LogEventSpawn[];
+    enemiesKilled: LogEventKill[];
+  };
 }
 
 export interface GameObject {
@@ -123,29 +149,32 @@ export function isGameOver(activeRound: GameRound, activePlayer: Alive): boolean
 /*
  * Generate div for given sprite.
  */
-export function generateDiv(sprite: Sprite, spawnId: number): HTMLDivElement {
-  const elEmoji = document.createElement("span");
-  elEmoji.id = `emoji-${spawnId}`;
+export function generateDivEl(sprite: Sprite, round: GameRound): HTMLDivElement {
+  const uuid = crypto.randomUUID();
 
+  const elEmoji = document.createElement("span");
+  elEmoji.id = `emoji-${uuid}`;
   elEmoji.textContent = sprite.emoji;
   elEmoji.style.fontSize = `${sprite.fontSize}px`;
 
   const elName = document.createElement("span");
-  elName.id = `name-${spawnId}`;
-
+  elName.id = `name-${uuid}`;
   elName.textContent = sprite.name;
   elName.classList.add("sr-only");
 
   const elDiv = document.createElement("div");
-  elDiv.id = `sprite-${spawnId}`;
+  elDiv.id = `sprite-${sprite.name}-${uuid}`;
 
+  // add children
   elDiv.appendChild(elEmoji);
   elDiv.appendChild(elName);
 
+  // set position
   elDiv.style.position = "absolute";
   elDiv.style.width = `${sprite.width}px`;
   elDiv.style.height = `${sprite.height}px`;
 
+  // clip emoji overflow
   elDiv.style.overflow = "clip";
 
   // set bg color alpha to 50%
@@ -157,8 +186,16 @@ export function generateDiv(sprite: Sprite, spawnId: number): HTMLDivElement {
   elDiv.style.display = "flex";
   elDiv.style.flexDirection = "row";
 
-  // track no. of spawns
-  spawnId += 1;
+  // track spawns
+  const newLog: LogEventSpawn = {
+    message: `Spawned new ${sprite.name}.`,
+    durationTimer: round.durationTimer,
+    timestamp: new Date(),
+    type: "Spawn",
+    sprite: sprite,
+    uuid: uuid,
+  };
+  round.logs.spawns.push(newLog);
 
   return elDiv;
 }
@@ -175,21 +212,28 @@ export function roundTo3Places(n: number): number {
 }
 
 /*
- * Attach `terrain` as backgroundImage for `el`.
+ * Set `map` as backgroundImage for `elTerrain`.
+ * Set tiling image as backgroundImage for `elGameWindow`.
  */
 export function setMap(elGameWindow: HTMLElement, elTerrain: HTMLElement, map: WorldMap): void {
-  // set background tile
-  elGameWindow.style.backgroundImage = `url(${map.background.path})`;
-  elGameWindow.style.backgroundSize = `${map.background.width}px ${map.background.height}px`;
-  elGameWindow.style.backgroundRepeat = "repeat";
-
-  // set terrain dimensions
+  // set dimensions
   elTerrain.style.width = `${map.terrain.width + elGameWindow.clientWidth}px`;
   elTerrain.style.height = `${map.terrain.height + elGameWindow.clientHeight}px`;
 
-  // set terrain background
+  // set elTerrain backgroundImage
   elTerrain.style.backgroundImage = `url(${map.terrain.path})`;
   elTerrain.style.backgroundSize = `${map.terrain.width}px ${map.terrain.height}px`;
   elTerrain.style.backgroundRepeat = "no-repeat";
   elTerrain.style.backgroundPosition = "center";
+
+  // set elGameWindow backgroundImage tile
+  elGameWindow.style.backgroundImage = `url(${map.background.path})`;
+  elGameWindow.style.backgroundSize = `${map.background.width}px ${map.background.height}px`;
+  elGameWindow.style.backgroundRepeat = "repeat";
+
+  // scroll to center
+  elGameWindow.scrollTo({
+    top: (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2,
+    left: (elGameWindow.scrollWidth - elGameWindow.clientWidth) / 2,
+  });
 }

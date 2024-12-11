@@ -2,19 +2,18 @@
   import ControlsJoystick from "./ControlsJoystick.svelte";
   import ControlsKeys from "./ControlsKeys.svelte";
 
-  import { enemyWave, player, mapForest, playerLevels, pickupXp } from "./data";
+  import { gameRound1, player, playerLevels, pickupXp } from "./data";
   import {
-    isColliding,
     checkCollisionsOnPlayer,
+    isColliding,
     isGameOver,
-    generateDiv,
+    generateDivEl,
     roundTo3Places,
     setMap,
   } from "./engine";
 
-  import type { GameObject, Alive, Weapon } from "./engine";
+  import type { GameRound, GameObject, Alive, Weapon, LogEventKill } from "./engine";
 
-  const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
   // ControlsKeys bindings
   let actionsActive: string[] = $state([]);
   let dirX = $state(0);
@@ -24,22 +23,22 @@
   let joystickAngle = $state(0); // rads
   let joystickTiltRatio = $state(0); // 0 to 1
 
-  // current game state
-  let elGameWindow: HTMLElement | undefined = $state();
-  let elTerrain: HTMLElement | undefined = $state();
-  let elPlayer: HTMLElement | undefined = $state();
-
-  let isStarted = $state(false);
-  let isFinished = $state(false);
-
-  let spawnId = 0;
-  let enemiesKilled = $state(0);
-
-  // active game objects
+  // game state
+  let activeRound = $state(structuredClone(gameRound1));
   let activePlayer = $state(structuredClone(player));
   let activeEnemies: Alive[] = $state([]);
   let activeWeapons: Weapon[] = $state([]);
-  let activeXpPickups: GameObject[] = $state([]);
+  let activePickupsXp: GameObject[] = $state([]);
+
+  let elGameWindow: HTMLDivElement | undefined = $state();
+  let elTerrain: HTMLDivElement | undefined = $state();
+  let elEnemies: HTMLDivElement | undefined = $state();
+  let elPickupsXp: HTMLDivElement | undefined = $state();
+  let elPlayer: HTMLDivElement | undefined = $state();
+  let elWeapons: HTMLDivElement | undefined = $state();
+
+  let isStarted = $state(false);
+  let isFinished = $state(false);
 
   let healthPercent = $derived(
     Math.round((activePlayer.health.current / activePlayer.health.max) * 100),
@@ -49,35 +48,35 @@
   let playerLevelXp = $state(0);
 
   // fps
-  let timestampPrev = $state(0);
-  let timeSincePrevFrame = $state(0);
-  let fps = $derived(Math.round(1000 / timeSincePrevFrame));
+  let timestampPrev = 0;
+  let timeSincePrevFrame = 0;
+  let fps = $state(0);
 
   // timer
-  let timeElapsed = $state(0);
-  let timerMinutes = $derived(Math.floor(timeElapsed / 1000 / 60));
-  let timerSeconds = $derived(Math.floor((timeElapsed / 1000) % 60));
+  let timerMinutes = $derived(Math.floor(activeRound.durationTimer.current / 1000 / 60));
+  let timerSeconds = $derived(Math.floor((activeRound.durationTimer.current / 1000) % 60));
 
   /*
-   * Spawn each enemy in `wave`, and attach it to `el`.
+   * Spawn each enemy in `wave`, and attach it to `elEnemies`.
    * Uses element with id `enemies`.
    */
-  function spawnEnemyWaveCircle(wave: Alive[], list: Alive[]): void {
+  function spawnEnemyWaveCircle(
+    enemies: Alive[],
+    elEnemies: HTMLDivElement,
+    round: GameRound,
+  ): void {
     // Roll for upgraded monster that drops treasure chest on defeat
 
-    const elEnemies = document.getElementById("enemies");
-    if (!elEnemies) {
-      console.error(`No div with id "enemies".`);
-      return;
-    }
+    const wave = round.enemyWaves[0];
 
     const distance = 300;
     const spread = 360 / wave.length;
 
     wave.forEach((enemy, i) => {
       // make new enemy
-      let newEnemy = structuredClone(enemy);
-      newEnemy.el = generateDiv(newEnemy.sprite, spawnId);
+      // structured clone doesn't work
+      const newEnemy = JSON.parse(JSON.stringify(enemy));
+      newEnemy.el = generateDivEl(newEnemy.sprite, round);
 
       // calc x, y from angle in circle
       const angle = spread * i;
@@ -93,7 +92,7 @@
       elEnemies.appendChild(newEnemy.el);
 
       // add to list of active enemies
-      list.push(newEnemy);
+      enemies.push(newEnemy);
     });
   }
 
@@ -210,84 +209,6 @@
   }
 
   /*
-   * Spawn experience pickup. Called when enemy is killed.
-   */
-  function spawnPickupXp(
-    activeXpPickups: GameObject[],
-    elTerrain: HTMLElement,
-    enemy: Alive,
-  ): GameObject[] {
-    if (!elTerrain) {
-      console.error(`No div with id "terrain".`);
-      return activeXpPickups;
-    }
-    if (!enemy.el) {
-      console.error(`No enemy el.`);
-      return activeXpPickups;
-    }
-
-    const newPickupXp = structuredClone(pickupXp);
-    const el = generateDiv(newPickupXp.sprite, spawnId);
-
-    el.style.left = enemy.el.style.left;
-    el.style.top = enemy.el.style.top;
-    el.style.rotate = "45deg"; // point at top
-
-    newPickupXp.el = el;
-
-    elTerrain.appendChild(el);
-    activeXpPickups.push();
-
-    return activeXpPickups;
-  }
-
-  /*
-   * Check enemies overlap with player weapons.
-   */
-  function checkCollisionsOnEnemies(activeEnemies: Alive[], activeWeapons: Weapon[]): Alive[] {
-    // check if enemy hit by player weapons
-    activeEnemies.forEach((enemy) => {
-      if (!enemy.el) return;
-      enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
-
-      activeWeapons.forEach((weapon) => {
-        if (!weapon.el) return;
-        if (!enemy.el) return;
-
-        // check collision with player weapon
-        if (!isColliding(weapon.el, enemy.el)) return;
-
-        // change background
-        enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
-
-        // take damage
-        enemy.health.current = enemy.health.current - weapon.damage;
-      });
-
-      if (enemy.health.current > enemy.health.min) return;
-
-      enemiesKilled += 1;
-
-      // remove enemy weapons sprites
-      enemy.weapons.forEach((weapon) => weapon.el?.remove());
-
-      // remove enemy sprite
-      enemy.el?.remove();
-
-      if (!elTerrain) {
-        console.error(`No div with id "terrain".`);
-        return;
-      }
-      activeXpPickups = spawnPickupXp(activeXpPickups, elTerrain, enemy);
-    });
-
-    // filter out dead enemies
-    activeEnemies = activeEnemies.filter((enemy) => enemy.health.current > 0);
-
-    return activeEnemies;
-  }
-
-  /*
    * Add new weapons. Remove expired weapons.
    */
   function checkPlayerWeapons(): void {
@@ -319,7 +240,7 @@
       // make new weapon object
       // structuredClone(weapon) causes error here
       const newWeapon = JSON.parse(JSON.stringify(weapon));
-      newWeapon.el = generateDiv(weapon.sprite, spawnId);
+      newWeapon.el = generateDivEl(weapon.sprite, activeRound);
 
       // add to active weapons
       activeWeapons.push(newWeapon);
@@ -348,7 +269,7 @@
    * Check if player overlaps with xp pickup.
    */
   function checkXpPickups(): void {
-    activeXpPickups.forEach((pickup) => {
+    activePickupsXp.forEach((pickup) => {
       if (!pickup.el) {
         console.error("No pickupXp el.");
         return;
@@ -384,17 +305,113 @@
   }
 
   /*
+   * Spawn experience pickup. Called when enemy is killed.
+   */
+  function spawnPickupXp(
+    pickupsXp: GameObject[],
+    elPickups: HTMLDivElement,
+    enemy: Alive,
+    pickupXp: GameObject,
+    round: GameRound,
+  ): GameObject[] {
+    if (!enemy.el) {
+      console.error(`No enemy el.`);
+      return pickupsXp;
+    }
+
+    const newPickupXp = structuredClone(pickupXp);
+    const el = generateDivEl(newPickupXp.sprite, round);
+
+    el.style.left = enemy.el.style.left;
+    el.style.top = enemy.el.style.top;
+    el.style.rotate = "45deg"; // point at top
+
+    newPickupXp.el = el;
+
+    elPickups.appendChild(el);
+    pickupsXp.push(newPickupXp);
+
+    return pickupsXp;
+  }
+
+  /*
+   * Check enemies overlap with player weapons. Returns array of alive enemies.
+   */
+  function checkCollisionsOnEnemies(
+    enemies: Alive[],
+    weapons: Weapon[],
+    round: GameRound,
+    elPickups: HTMLDivElement,
+  ): Alive[] {
+    enemies.forEach((enemy) => {
+      if (!enemy.el) return;
+      enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
+
+      weapons.forEach((weapon) => {
+        if (!weapon.el) return;
+        if (!enemy.el) return;
+
+        // check collision with player weapon
+        if (!isColliding(weapon.el, enemy.el)) return;
+
+        // change background
+        enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
+
+        // take damage
+        enemy.health.current = enemy.health.current - weapon.damage;
+
+        // if not killed
+        if (enemy.health.current > enemy.health.min) return;
+
+        // track enemiesKilled
+        const newLog: LogEventKill = {
+          message: `Killed enemy ${enemy.name}.`,
+          durationTimer: round.durationTimer,
+          timestamp: new Date(),
+          type: "Kill",
+          enemy: enemy,
+          weapon: weapon,
+        };
+        round.logs.enemiesKilled.push(newLog);
+
+        // remove enemy weapons sprites
+        enemy.weapons.forEach((weapon) => weapon.el?.remove());
+        // remove enemy sprite
+        enemy.el?.remove();
+
+        // spawn xp pickup
+        if (!elPickups) {
+          console.error(`No div with id "pickups".`);
+          return;
+        }
+        activePickupsXp = spawnPickupXp(activePickupsXp, elPickups, enemy, pickupXp, round);
+      });
+    });
+
+    // filter out dead enemies
+    enemies = enemies.filter((enemy) => enemy.health.current > 0);
+
+    return enemies;
+  }
+
+  /*
    * Trigger game logic.
    */
   function gameLoop(timestamp: number) {
     // timestamp: DOMHighResTimeStamp
     // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
 
-    // fps
+    if (!elPickupsXp) {
+      console.error(`No div with id "pickups-xp".`);
+      return;
+    }
+
+    // calc fps
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
+    fps = Math.round(1000 / timeSincePrevFrame);
 
-    // game over
+    // check game over
     isFinished = isGameOver(activeRound, activePlayer);
     if (isFinished) return;
 
@@ -403,7 +420,12 @@
       movePlayer();
       checkPlayerWeapons();
       moveEnemies();
-      activeEnemies = checkCollisionsOnEnemies(activeEnemies, activeWeapons);
+      activeEnemies = checkCollisionsOnEnemies(
+        activeEnemies,
+        activeWeapons,
+        activeRound,
+        elPickupsXp,
+      );
       activePlayer = checkCollisionsOnPlayer(activePlayer, activeEnemies);
       checkXpPickups();
       checkLevelUp();
@@ -414,30 +436,11 @@
   }
 
   /*
-   * Make new player object & sprite el on start.
-   */
-  function spawnPlayer(): void {
-    // make fresh copy of player data, and transfer elPlayer
-    activePlayer = structuredClone(player);
-
-    // make player sprite
-    const elSprite = generateDiv(activePlayer.sprite, spawnId);
-    activePlayer.el = elSprite;
-
-    // add to game
-    if (!elPlayer) {
-      console.error(`No element with id "player".`);
-      return;
-    }
-    elPlayer.insertBefore(elSprite, elPlayer.firstElementChild);
-  }
-
-  /*
    * Generate game state.
    * Attached to UI button.
    */
   function startGame(): void {
-    // div doesn't exist yet
+    // el doesn't exist yet
     if (!elGameWindow) {
       console.error(`No element with id "game-window".`);
       return;
@@ -446,16 +449,34 @@
       console.error(`No element with id "terrain".`);
       return;
     }
+    if (!elEnemies) {
+      console.error(`No div with id "enemies".`);
+      return;
+    }
+    if (!elPickupsXp) {
+      console.error(`No div with id "pickups".`);
+      return;
+    }
+    if (!elPlayer) {
+      console.error(`No element with id "player".`);
+      return;
+    }
+    if (!elWeapons) {
+      console.error(`No div with id "weapons".`);
+      return;
+    }
 
     // reset game state
+    activeRound = structuredClone(gameRound1);
     activeEnemies = [];
     activeWeapons = [];
-    activeXpPickups = [];
+    activePickupsXp = [];
+    elEnemies.replaceChildren(); // empty a node of all its children
+    elPickupsXp.replaceChildren();
+    elWeapons.replaceChildren();
     isFinished = false;
-    isStarted = true; // hide info el, use joystick
     isPaused = false;
-    enemiesKilled = 0;
-    spawnId = 0;
+    isStarted = true; // hide info el, use joystick
     playerLevelXp = 0;
     playerLevel = 1;
 
@@ -463,20 +484,17 @@
     // fullscreen game-window sets height, width
     // elGameWindow.requestFullscreen();
 
-    // set map
-    setMap(elGameWindow, elTerrain, mapForest);
+    setMap(elGameWindow, elTerrain, activeRound.map);
 
-    // scroll to center
-    elGameWindow.scrollTo({
-      top: (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2,
-      left: (elGameWindow.scrollWidth - elGameWindow.clientWidth) / 2,
-    });
+    // new player object & sprite el
+    // after terrain load because of height, width
+    activePlayer = structuredClone(player);
+    activePlayer.el = generateDivEl(activePlayer.sprite, activeRound);
 
-    // fresh player object after terrain load because of height, width
-    spawnPlayer();
+    elPlayer.replaceChildren();
+    elPlayer.appendChild(activePlayer.el);
 
-    // spawn enemies
-    spawnEnemyWaveCircle(enemyWave, activeEnemies);
+    spawnEnemyWaveCircle(activeEnemies, elEnemies, activeRound);
 
     // start game loop
     window.requestAnimationFrame(gameLoop);
@@ -546,8 +564,8 @@
       </time>
 
       <div class="flex flex-col gap-1 justify-self-end text-end">
-        <span>{0} 🪙</span>
-        <span>{enemiesKilled} 💀</span>
+        <!-- <span>{0} 🪙</span> -->
+        <span>{activeRound.logs.enemiesKilled?.length ?? 0} 💀</span>
 
         <form
           onsubmit={(event) => {
@@ -567,7 +585,13 @@
         <form
           onsubmit={(event) => {
             event.preventDefault();
-            spawnEnemyWaveCircle(enemyWave, activeEnemies);
+
+            if (!elEnemies) {
+              console.error(`No div with id "enemies".`);
+              return;
+            }
+
+            spawnEnemyWaveCircle(activeEnemies, elEnemies, activeRound);
           }}
         >
           <button class="bg-rose-900 px-4 py-1 font-extrabold">spawn enemies</button>
@@ -595,13 +619,18 @@
       <div id="menu" class="mx-auto max-w-max bg-gray-900/70 p-2">
         <h2 class="mb-2 text-lg font-bold">Map</h2>
 
-        <img src={mapForest.terrain.path} alt="Minimap of {mapForest.name} area." class="w-full" />
+        <img
+          src={gameRound1.map.terrain.path}
+          alt="Minimap of {gameRound1.map.name} area."
+          class="w-full"
+        />
       </div>
     {/if}
   </div>
 
   <div bind:this={elTerrain} id="terrain" class="relative">
-    <div id="enemies" class="absolute left-0 top-0 h-full w-full"></div>
+    <div bind:this={elEnemies} id="enemies" class="absolute left-0 top-0 h-full w-full"></div>
+    <div bind:this={elPickupsXp} id="pickups-xp" class="absolute left-0 top-0 h-full w-full"></div>
   </div>
 
   <div
@@ -639,7 +668,7 @@
       </div>
     </div>
 
-    <div id="weapons" class="z-10"></div>
+    <div bind:this={elWeapons} id="weapons" class="z-10"></div>
   </div>
 </div>
 
