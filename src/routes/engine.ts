@@ -108,6 +108,19 @@ export function checkCollisionsOnPlayer(activePlayer: Alive, activeEnemies: Aliv
 }
 
 /*
+ * Check timer, player health.
+ */
+export function isGameOver(activeRound: GameRound, activePlayer: Alive): boolean {
+  // time up
+  if (activeRound.durationTimer.current > activeRound.durationTimer.max) return true;
+
+  // out of health
+  if (activePlayer.health.current <= activePlayer.health.min) return true;
+
+  return false;
+}
+
+/*
  * Generate div for given sprite.
  */
 export function generateDiv(sprite: Sprite, spawnId: number): HTMLDivElement {

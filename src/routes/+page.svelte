@@ -6,6 +6,7 @@
   import {
     isColliding,
     checkCollisionsOnPlayer,
+    isGameOver,
     generateDiv,
     roundTo3Places,
     setMap,
@@ -14,6 +15,14 @@
   import type { GameObject, Alive, Weapon } from "./engine";
 
   const durationGameEnd = 30 * 60 * 1000; // minutes * seconds * milliseconds
+  // ControlsKeys bindings
+  let actionsActive: string[] = $state([]);
+  let dirX = $state(0);
+  let dirY = $state(0);
+  let isPaused = $state(false);
+  // ControlsJoystick bindings
+  let joystickAngle = $state(0); // rads
+  let joystickTiltRatio = $state(0); // 0 to 1
 
   // current game state
   let elGameWindow: HTMLElement | undefined = $state();
@@ -27,8 +36,8 @@
   let enemiesKilled = $state(0);
 
   // active game objects
+  let activePlayer = $state(structuredClone(player));
   let activeEnemies: Alive[] = $state([]);
-  let activePlayer: Alive = $state(structuredClone(player));
   let activeWeapons: Weapon[] = $state([]);
   let activeXpPickups: GameObject[] = $state([]);
 
@@ -48,14 +57,6 @@
   let timeElapsed = $state(0);
   let timerMinutes = $derived(Math.floor(timeElapsed / 1000 / 60));
   let timerSeconds = $derived(Math.floor((timeElapsed / 1000) % 60));
-
-  // controls
-  let actionsActive: string[] = $state([]);
-  let isPaused = $state(false);
-  let dirX = $state(0);
-  let dirY = $state(0);
-  let joystickAngle = $state(0); // rads
-  let joystickTiltRatio = $state(0); // 0 to 1
 
   /*
    * Spawn each enemy in `wave`, and attach it to `el`.
@@ -383,19 +384,6 @@
   }
 
   /*
-   * Check timer, player health.
-   */
-  function checkGameOver(): boolean {
-    // time up
-    if (activeRound.durationTimer.current > activeRound.durationTimer.max) return true;
-
-    // out of health
-    if (activePlayer.health.current <= activePlayer.health.min) return true;
-
-    return false;
-  }
-
-  /*
    * Trigger game logic.
    */
   function gameLoop(timestamp: number) {
@@ -407,7 +395,7 @@
     timestampPrev = timestamp;
 
     // game over
-    isFinished = checkGameOver();
+    isFinished = isGameOver(activeRound, activePlayer);
     if (isFinished) return;
 
     if (!isPaused) {
@@ -462,6 +450,7 @@
     // reset game state
     activeEnemies = [];
     activeWeapons = [];
+    activeXpPickups = [];
     isFinished = false;
     isStarted = true; // hide info el, use joystick
     isPaused = false;
@@ -477,13 +466,10 @@
     // set map
     setMap(elGameWindow, elTerrain, mapForest);
 
-    const top = (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2;
-    const left = (elGameWindow.scrollWidth - elGameWindow.clientWidth) / 2;
-
     // scroll to center
     elGameWindow.scrollTo({
-      top: top,
-      left: left,
+      top: (elGameWindow.scrollHeight - elGameWindow.clientHeight) / 2,
+      left: (elGameWindow.scrollWidth - elGameWindow.clientWidth) / 2,
     });
 
     // fresh player object after terrain load because of height, width
@@ -497,7 +483,7 @@
   }
 </script>
 
-<ControlsKeys bind:actionsActive bind:isPaused bind:dirX bind:dirY />
+<ControlsKeys bind:actionsActive bind:dirX bind:dirY bind:isPaused />
 
 <div id="game-window" bind:this={elGameWindow} class="h-screen w-screen overflow-auto bg-gray-900">
   <div
