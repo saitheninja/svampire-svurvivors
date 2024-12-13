@@ -104,6 +104,7 @@ export const player: Alive = {
   health: { min: 0, max: 100, current: 100 },
   speed: 1,
   weapons: [...weaponsPlayerAll],
+  activeWeapons: [],
   sprite: {
     name: "player",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -123,6 +124,7 @@ const enemySkeleton: Alive = {
   health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
   weapons: [weaponSkeletonBody],
+  activeWeapons: [],
   sprite: {
     name: "skeleton",
     colorBg: "rgb(132 204 22)", // bg-lime-500
@@ -140,6 +142,7 @@ const enemyZombie: Alive = {
   health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
   weapons: [weaponZombieBody],
+  activeWeapons: [],
   sprite: {
     name: "zombie",
     colorBg: "rgb(132 204 22)", // bg-lime-500
@@ -157,6 +160,7 @@ const enemyGoblin: Alive = {
   health: { min: 0, max: 100, current: 100 },
   speed: 0.05,
   weapons: [weaponGoblinBody],
+  activeWeapons: [],
   sprite: {
     name: "goblin",
     colorBg: "rgb(239 68 68)", // bg-red-500

@@ -5,6 +5,7 @@
   import { gameRound1, player, playerLevels, pickupXp } from "./data";
   import {
     checkCollisionsOnPlayer,
+    checkWeapons,
     isColliding,
     isGameOver,
     generateDivEl,
@@ -27,7 +28,6 @@
   let activeRound = $state(structuredClone(gameRound1));
   let activePlayer = $state(structuredClone(player));
   let activeEnemies: Alive[] = $state([]);
-  let activeWeapons: Weapon[] = $state([]);
   let activePickupsXp: GameObject[] = $state([]);
 
   let elGameWindow: HTMLDivElement | undefined = $state();
@@ -209,63 +209,6 @@
   }
 
   /*
-   * Add new weapons. Remove expired weapons.
-   */
-  function checkPlayerWeapons(): void {
-    if (!activePlayer) return;
-
-    // remove elements of expired weapons
-    activeWeapons.forEach((weapon) => {
-      weapon.durationActive.current += timeSincePrevFrame;
-
-      if (weapon.durationActive.current < weapon.durationActive.max) return;
-      weapon.el?.remove();
-    });
-
-    // remove expired weapons from tracking list
-    activeWeapons = activeWeapons.filter(
-      (weapon) => weapon.durationActive.current < weapon.durationActive.max,
-    );
-
-    // add new weapons
-    activePlayer.weapons.forEach((weapon) => {
-      weapon.durationCooldown.current += timeSincePrevFrame;
-
-      // if still on cooldown
-      if (weapon.durationCooldown.current < weapon.durationCooldown.max) return;
-
-      // reset cooldown
-      weapon.durationCooldown.current = 0;
-
-      // make new weapon object
-      // structuredClone(weapon) causes error here
-      const newWeapon = JSON.parse(JSON.stringify(weapon));
-      newWeapon.el = generateDivEl(weapon.sprite, activeRound);
-
-      // add to active weapons
-      activeWeapons.push(newWeapon);
-
-      // set el location
-      if (!activePlayer?.el) return;
-      const left = parseFloat(activePlayer.el.style.left);
-      const width = parseFloat(activePlayer.el.style.width);
-      const top = parseFloat(activePlayer.el.style.top);
-      const height = parseFloat(activePlayer.el.style.height);
-
-      newWeapon.el.style.left = `${left + width}px`;
-      newWeapon.el.style.top = `${top + height}px`;
-
-      // add el to world
-      const elWeapons = document.getElementById("weapons");
-      if (!elWeapons) {
-        console.error(`No div with id "weapons".`);
-        return;
-      }
-      elWeapons.appendChild(newWeapon.el);
-    });
-  }
-
-  /*
    * Check if player overlaps with xp pickup.
    */
   function checkXpPickups(): void {
@@ -417,18 +360,25 @@
 
     if (!isPaused) {
       activeRound.durationTimer.current += timeSincePrevFrame;
+
       movePlayer();
-      checkPlayerWeapons();
+      activePlayer = checkWeapons(activePlayer, activeRound, timeSincePrevFrame);
+
       moveEnemies();
       activeEnemies = checkCollisionsOnEnemies(
         activeEnemies,
-        activeWeapons,
+        activePlayer.activeWeapons,
         activeRound,
         elPickupsXp,
       );
       activePlayer = checkCollisionsOnPlayer(activePlayer, activeEnemies);
       checkXpPickups();
       checkLevelUp();
+
+      // let activeEnemiesNew: Alive[] = [];
+      // activeEnemies.forEach((enemy) => {
+      //   activeEnemiesNew.push(checkWeapons(enemy, activeRound, timeSincePrevFrame));
+      // });
     }
 
     // new frame
@@ -454,7 +404,7 @@
       return;
     }
     if (!elPickupsXp) {
-      console.error(`No div with id "pickups".`);
+      console.error(`No div with id "pickups-xp".`);
       return;
     }
     if (!elPlayer) {
@@ -469,7 +419,6 @@
     // reset game state
     activeRound = structuredClone(gameRound1);
     activeEnemies = [];
-    activeWeapons = [];
     activePickupsXp = [];
     elEnemies.replaceChildren(); // empty a node of all its children
     elPickupsXp.replaceChildren();

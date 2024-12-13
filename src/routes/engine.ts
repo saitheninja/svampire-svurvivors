@@ -74,6 +74,7 @@ export interface Alive extends GameObject {
   health: NumberRange; // need max for level up, accesory effects, etc.
   speed: number;
   weapons: Weapon[];
+  activeWeapons: Weapon[];
 }
 
 /*
@@ -126,11 +127,65 @@ export function checkCollisionsOnPlayer(activePlayer: Alive, activeEnemies: Aliv
     // if player not hit by enemy sprite
     if (!isColliding(enemy.el, activePlayer.el)) return;
 
+/*
+ * Add new weapons. Remove expired weapons.
+ */
+export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame: number): Alive {
+  console.log(alive);
+  // remove elements of expired weapons
+  alive.activeWeapons.forEach((weapon) => {
+    weapon.durationActive.current += timeSincePrevFrame;
+
+    if (weapon.durationActive.current < weapon.durationActive.max) return;
+    weapon.el?.remove();
+  });
+
     activePlayer.health.current = activePlayer.health.current - 1;
     activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
+  // remove expired weapons from tracking list
+  alive.activeWeapons = alive.activeWeapons.filter(
+    (weapon) => weapon.durationActive.current < weapon.durationActive.max,
+  );
+
+  // add new weapons
+  alive.weapons.forEach((weapon) => {
+    weapon.durationCooldown.current += timeSincePrevFrame;
+
+    // if still on cooldown
+    if (weapon.durationCooldown.current < weapon.durationCooldown.max) return;
+
+    // reset cooldown
+    weapon.durationCooldown.current = 0;
+
+    // make new weapon object
+    // structuredClone(weapon) causes error here
+    const newWeapon = JSON.parse(JSON.stringify(weapon));
+    newWeapon.el = generateDivEl(weapon.sprite, round);
+
+    // add to active weapons
+    alive.activeWeapons.push(newWeapon);
+
+    // set el location
+    if (!alive?.el) return;
+    const left = parseFloat(alive.el.style.left);
+    const width = parseFloat(alive.el.style.width);
+    const top = parseFloat(alive.el.style.top);
+    const height = parseFloat(alive.el.style.height);
+
+    newWeapon.el.style.left = `${left + width}px`;
+    newWeapon.el.style.top = `${top + height}px`;
+
+    // add el to world
+    const elWeapons = document.getElementById("weapons");
+    if (!elWeapons) {
+      console.error(`No div with id "weapons".`);
+      return;
+    }
+    elWeapons.appendChild(newWeapon.el);
   });
 
   return activePlayer;
+  return alive;
 }
 
 /*
