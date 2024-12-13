@@ -4,6 +4,7 @@
 
   import { gameRound1, player, playerLevels, pickupXp } from "./data";
   import {
+    checkCollisionsOnEnemies,
     checkCollisionsOnPlayer,
     checkWeapons,
     isColliding,
@@ -13,7 +14,7 @@
     setMap,
   } from "./engine";
 
-  import type { GameRound, GameObject, Alive, Weapon, LogEventKill } from "./engine";
+  import type { GameRound, GameObject, Alive } from "./engine";
 
   // ControlsKeys bindings
   let actionsActive: string[] = $state([]);
@@ -248,96 +249,6 @@
   }
 
   /*
-   * Spawn experience pickup. Called when enemy is killed.
-   */
-  function spawnPickupXp(
-    pickupsXp: GameObject[],
-    elPickups: HTMLDivElement,
-    enemy: Alive,
-    pickupXp: GameObject,
-    round: GameRound,
-  ): GameObject[] {
-    if (!enemy.el) {
-      console.error(`No enemy el.`);
-      return pickupsXp;
-    }
-
-    const newPickupXp = structuredClone(pickupXp);
-    const el = generateDivEl(newPickupXp.sprite, round);
-
-    el.style.left = enemy.el.style.left;
-    el.style.top = enemy.el.style.top;
-    el.style.rotate = "45deg"; // point at top
-
-    newPickupXp.el = el;
-
-    elPickups.appendChild(el);
-    pickupsXp.push(newPickupXp);
-
-    return pickupsXp;
-  }
-
-  /*
-   * Check enemies overlap with player weapons. Returns array of alive enemies.
-   */
-  function checkCollisionsOnEnemies(
-    enemies: Alive[],
-    weapons: Weapon[],
-    round: GameRound,
-    elPickups: HTMLDivElement,
-  ): Alive[] {
-    enemies.forEach((enemy) => {
-      if (!enemy.el) return;
-      enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
-
-      weapons.forEach((weapon) => {
-        if (!weapon.el) return;
-        if (!enemy.el) return;
-
-        // check collision with player weapon
-        if (!isColliding(weapon.el, enemy.el)) return;
-
-        // change background
-        enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
-
-        // take damage
-        enemy.health.current = enemy.health.current - weapon.damage;
-
-        // if not killed
-        if (enemy.health.current > enemy.health.min) return;
-
-        // track enemiesKilled
-        const newLog: LogEventKill = {
-          message: `Killed enemy ${enemy.name}.`,
-          durationTimer: round.durationTimer,
-          timestamp: new Date(),
-          type: "Kill",
-          enemy: enemy,
-          weapon: weapon,
-        };
-        round.logs.enemiesKilled.push(newLog);
-
-        // remove enemy weapons sprites
-        enemy.weapons.forEach((weapon) => weapon.el?.remove());
-        // remove enemy sprite
-        enemy.el?.remove();
-
-        // spawn xp pickup
-        if (!elPickups) {
-          console.error(`No div with id "pickups".`);
-          return;
-        }
-        activePickupsXp = spawnPickupXp(activePickupsXp, elPickups, enemy, pickupXp, round);
-      });
-    });
-
-    // filter out dead enemies
-    enemies = enemies.filter((enemy) => enemy.health.current > 0);
-
-    return enemies;
-  }
-
-  /*
    * Trigger game logic.
    */
   function gameLoop(timestamp: number) {
@@ -369,9 +280,12 @@
         activeEnemies,
         activePlayer.activeWeapons,
         activeRound,
+        activePickupsXp,
+        pickupXp,
         elPickupsXp,
       );
-      activePlayer = checkCollisionsOnPlayer(activePlayer, activeEnemies);
+
+      activePlayer = checkCollisionsOnPlayer(activePlayer, activeEnemies, timeSincePrevFrame);
       checkXpPickups();
       checkLevelUp();
 

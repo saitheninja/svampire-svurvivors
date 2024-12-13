@@ -71,6 +71,7 @@ export interface Weapon extends GameObject {
 export interface Alive extends GameObject {
   capacityAccessories: number; // default 6
   capacityWeapons: number; // default 6
+  durationHitCooldown: NumberRange; // invincibility after hit, milliseconds
   health: NumberRange; // need max for level up, accesory effects, etc.
   speed: number;
   weapons: Weapon[];
@@ -94,44 +95,167 @@ export function isColliding(el1: HTMLElement, el2: HTMLElement): boolean {
 
   return !notColliding;
 }
+/*
+ * Check timer, player health.
+ */
+export function isGameOver(activeRound: GameRound, activePlayer: Alive): boolean {
+  // time up
+  if (activeRound.durationTimer.current > activeRound.durationTimer.max) return true;
+
+  // out of health
+  if (activePlayer.health.current <= activePlayer.health.min) return true;
+
+  return false;
+}
+
+/*
+ * Spawn experience pickup. Called when enemy is killed.
+ */
+function spawnPickupXp(
+  elPickups: HTMLDivElement,
+  enemy: Alive,
+  pickupsXp: GameObject[],
+  pickupXp: GameObject,
+  round: GameRound,
+): GameObject[] {
+  if (!enemy.el) {
+    console.error(`No enemy el.`);
+    return pickupsXp;
+  }
+
+  const newPickupXp = structuredClone(pickupXp);
+  const el = generateDivEl(newPickupXp.sprite, round);
+
+  el.style.left = enemy.el.style.left;
+  el.style.top = enemy.el.style.top;
+  el.style.rotate = "45deg"; // point at top
+
+  newPickupXp.el = el;
+
+  elPickups.appendChild(el);
+  pickupsXp.push(newPickupXp);
+
+  return pickupsXp;
+}
+
+/*
+ * Check enemies overlap with player weapons. Returns array of alive enemies.
+ */
+export function checkCollisionsOnEnemies(
+  enemies: Alive[],
+  weapons: Weapon[],
+  round: GameRound,
+  activePickupsXp: GameObject[],
+  pickupXp: GameObject,
+  elPickups: HTMLDivElement,
+): Alive[] {
+  enemies.forEach((enemy) => {
+    if (!enemy.el) return;
+    enemy.el.style.backgroundColor = enemy.sprite.colorBg.replace(")", " / 0.5)");
+
+    weapons.forEach((weapon) => {
+      if (!weapon.el) return;
+      if (!enemy.el) return;
+
+      // check collision with player weapon
+      if (!isColliding(weapon.el, enemy.el)) return;
+
+      // change background
+      enemy.el.style.backgroundColor = enemy.sprite.colorHit.replace(")", " / 0.5)");
+
+      // take damage
+      enemy.health.current = enemy.health.current - weapon.damage;
+
+      // if not killed
+      if (enemy.health.current > enemy.health.min) return;
+
+      // track enemiesKilled
+      const newLog: LogEventKill = {
+        message: `Killed enemy ${enemy.name}.`,
+        durationTimer: round.durationTimer,
+        timestamp: new Date(),
+        type: "Kill",
+        enemy: enemy,
+        weapon: weapon,
+      };
+      round.logs.enemiesKilled.push(newLog);
+
+      // remove enemy weapons sprites
+      enemy.weapons.forEach((weapon) => weapon.el?.remove());
+      // remove enemy sprite
+      enemy.el?.remove();
+
+      // spawn xp pickup
+      if (!elPickups) {
+        console.error(`No div with id "pickups".`);
+        return;
+      }
+      activePickupsXp = spawnPickupXp(elPickups, enemy, activePickupsXp, pickupXp, round);
+    });
+  });
+
+  // filter out dead enemies
+  enemies = enemies.filter((enemy) => enemy.health.current > 0);
+
+  return enemies;
+}
 
 /*
  * If player sprite overlaps with enemy sprite or enemy weapon sprite:
  * - take damage,
  * - change sprite background-color.
  */
-export function checkCollisionsOnPlayer(activePlayer: Alive, activeEnemies: Alive[]): Alive {
-  if (!activePlayer.el) {
-    console.error("No activePlayer el.");
-    return activePlayer;
+export function checkCollisionsOnPlayer(
+  player: Alive,
+  enemies: Alive[],
+  durationSincePrevFrame: number,
+): Alive {
+  if (!player.el) {
+    console.error("No player el.");
+    return player;
   }
 
-  // if hit by any enemy, change background-color
-  activePlayer.el.style.backgroundColor = activePlayer.sprite.colorBg.replace(")", " / 0.5)");
+  player.durationHitCooldown.current += durationSincePrevFrame;
+  if (player.durationHitCooldown.current <= player.durationHitCooldown.max) return player;
 
-  activeEnemies.forEach((enemy) => {
+  // if hit by any enemy, change background-color
+  player.el.style.backgroundColor = player.sprite.colorBg.replace(")", " / 0.5)");
+
+  enemies.forEach((enemy) => {
     if (!enemy.el) return;
-    if (!activePlayer.el) return;
+    if (!player.el) return;
 
     enemy.weapons.forEach((weapon) => {
       if (!weapon.el) return;
-      if (!activePlayer.el) return;
+      if (!player.el) return;
+
+      if (player.durationHitCooldown.current <= player.durationHitCooldown.max) return;
 
       // if player not hit by weapon
-      if (!isColliding(weapon.el, activePlayer.el)) return;
+      if (!isColliding(weapon.el, player.el)) return;
 
-      activePlayer.health.current = activePlayer.health.current - weapon.damage;
-      activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
+      player.health.current = player.health.current - weapon.damage;
+      player.durationHitCooldown.current = player.durationHitCooldown.min;
+      player.el.style.backgroundColor = player.sprite.colorHit.replace(")", " / 0.5)");
     });
 
+    if (player.durationHitCooldown.current <= player.durationHitCooldown.max) return;
+
     // if player not hit by enemy sprite
-    if (!isColliding(enemy.el, activePlayer.el)) return;
+    if (!isColliding(enemy.el, player.el)) return;
+
+    player.health.current = player.health.current - 1;
+    player.durationHitCooldown.current = player.durationHitCooldown.min;
+    player.el.style.backgroundColor = player.sprite.colorHit.replace(")", " / 0.5)");
+  });
+
+  return player;
+}
 
 /*
  * Add new weapons. Remove expired weapons.
  */
 export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame: number): Alive {
-  console.log(alive);
   // remove elements of expired weapons
   alive.activeWeapons.forEach((weapon) => {
     weapon.durationActive.current += timeSincePrevFrame;
@@ -140,8 +264,6 @@ export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame:
     weapon.el?.remove();
   });
 
-    activePlayer.health.current = activePlayer.health.current - 1;
-    activePlayer.el.style.backgroundColor = activePlayer.sprite.colorHit.replace(")", " / 0.5)");
   // remove expired weapons from tracking list
   alive.activeWeapons = alive.activeWeapons.filter(
     (weapon) => weapon.durationActive.current < weapon.durationActive.max,
@@ -184,21 +306,7 @@ export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame:
     elWeapons.appendChild(newWeapon.el);
   });
 
-  return activePlayer;
   return alive;
-}
-
-/*
- * Check timer, player health.
- */
-export function isGameOver(activeRound: GameRound, activePlayer: Alive): boolean {
-  // time up
-  if (activeRound.durationTimer.current > activeRound.durationTimer.max) return true;
-
-  // out of health
-  if (activePlayer.health.current <= activePlayer.health.min) return true;
-
-  return false;
 }
 
 /*
