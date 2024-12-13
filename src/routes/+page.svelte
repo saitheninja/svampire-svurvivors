@@ -29,11 +29,13 @@
   let activeRound = $state(structuredClone(gameRound1));
   let activePlayer = $state(structuredClone(player));
   let activeEnemies: Alive[] = $state([]);
+  let activePickupsItems: GameObject[] = $state([]);
   let activePickupsXp: GameObject[] = $state([]);
 
   let elGameWindow: HTMLDivElement | undefined = $state();
   let elTerrain: HTMLDivElement | undefined = $state();
   let elEnemies: HTMLDivElement | undefined = $state();
+  let elPickupsItems: HTMLDivElement | undefined = $state();
   let elPickupsXp: HTMLDivElement | undefined = $state();
   let elPlayer: HTMLDivElement | undefined = $state();
   let elWeapons: HTMLDivElement | undefined = $state();
@@ -317,6 +319,10 @@
       console.error(`No div with id "enemies".`);
       return;
     }
+    if (!elPickupsItems) {
+      console.error(`No div with id "pickups-items".`);
+      return;
+    }
     if (!elPickupsXp) {
       console.error(`No div with id "pickups-xp".`);
       return;
@@ -333,8 +339,10 @@
     // reset game state
     activeRound = structuredClone(gameRound1);
     activeEnemies = [];
+    activePickupsItems = [];
     activePickupsXp = [];
     elEnemies.replaceChildren(); // empty a node of all its children
+    elPickupsItems.replaceChildren();
     elPickupsXp.replaceChildren();
     elWeapons.replaceChildren();
     isFinished = false;
@@ -462,6 +470,13 @@
 
         <span class="text-blue-700">{fps} fps</span>
 
+        <span class="text-blue-700"
+          >pickups: {activePickupsItems.length}
+          {#each activePickupsItems as { sprite }}
+            <span>{sprite.emoji}</span>
+          {/each}
+        </span>
+
         <!-- <span class="text-blue-500" -->
         <!--   >weapons: {activeWeapons.length} -->
         <!--   {#each activeWeapons as { sprite }} -->
@@ -494,6 +509,11 @@
   <div bind:this={elTerrain} id="terrain" class="relative">
     <div bind:this={elEnemies} id="enemies" class="absolute left-0 top-0 h-full w-full"></div>
     <div bind:this={elPickupsXp} id="pickups-xp" class="absolute left-0 top-0 h-full w-full"></div>
+    <div
+      bind:this={elPickupsItems}
+      id="pickups-items"
+      class="absolute left-0 top-0 z-20 h-full w-full"
+    ></div>
   </div>
 
   <div
