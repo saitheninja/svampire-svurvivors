@@ -1,5 +1,5 @@
 <script lang="ts">
-// https://coherent-labs.com/blog/uitutorials/virtual-joystick/
+  // https://coherent-labs.com/blog/uitutorials/virtual-joystick/
   let {
     joystickAngle = $bindable(0),
     joystickTiltRatio = $bindable(0),
@@ -23,19 +23,18 @@
   let distanceX = $derived(pointerMoveX - pointerDownX);
   let distanceY = $derived(pointerMoveY - pointerDownY);
 
-  let angleJoystick = $derived(Math.atan2(distanceY, distanceX) * (180 / Math.PI));
   let distance = $derived(Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)));
   let distanceClamped = $derived(Math.min(distance, radiusJoystick));
 
   $effect(() => {
+    // reset to defaults
     if (!isPointerDown) {
       joystickAngle = 0;
       joystickTiltRatio = 0;
-
       return;
     }
 
-    joystickAngle = angleJoystick;
+    joystickAngle = Math.atan2(distanceY, distanceX);
     joystickTiltRatio = distanceClamped / radiusJoystick;
   });
 
@@ -86,7 +85,7 @@
     style:top="{pointerDownY - radiusJoystick}px"
     style:width="{radiusJoystick * 2}px"
     style:height="{radiusJoystick * 2}px"
-    style:transform="rotate({angleJoystick}deg)"
+    style:transform="rotate({joystickAngle}rad)"
   >
     <div
       id="joystick-lever"

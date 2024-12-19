@@ -118,7 +118,7 @@ export const player: Alive = {
   activeWeapons: [],
   durationHitCooldown: { min: 0, max: 200, current: 0 },
   health: { min: 0, max: 100, current: 100 },
-  speed: 1,
+  speed: 0.5,
   sprite: {
     name: "player",
     colorBg: "rgb(30 58 138)", // bg-blue-900

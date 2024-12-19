@@ -360,13 +360,13 @@ export function generateDivEl(sprite: Sprite, round: GameRound): HTMLDivElement 
 /*
  * Custom rounding.
  */
-export function roundTo3Places(n: number): number {
-  const n3 = n * 1_000;
-  const rounded = Math.round(n3);
-  const divided = rounded / 1_000;
-
-  return divided;
-}
+// export function roundTo3Places(n: number): number {
+//   const n3 = n * 1_000;
+//   const rounded = Math.round(n3);
+//   const divided = rounded / 1_000;
+//
+//   return divided;
+// }
 
 /*
  * Set `map` as backgroundImage for `elTerrain`.

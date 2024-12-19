@@ -10,20 +10,19 @@
     isColliding,
     isGameOver,
     generateDivEl,
-    roundTo3Places,
     setMap,
   } from "./engine";
 
   import type { GameRound, GameObject, Alive } from "./engine";
 
+  // ControlsJoystick bindings
+  let joystickAngle = $state(0); // rads
+  let joystickTiltRatio = $state(0); // 0 to 1
   // ControlsKeys bindings
   let actionsActive: string[] = $state([]);
   let dirX = $state(0);
   let dirY = $state(0);
   let isPaused = $state(false);
-  // ControlsJoystick bindings
-  let joystickAngle = $state(0); // rads
-  let joystickTiltRatio = $state(0); // 0 to 1
 
   // game state
   let activeRound = $state(structuredClone(gameRound1));
@@ -101,40 +100,32 @@
   /*
    * Calc player movement and scroll world.
    */
-  function movePlayer(): void {
-    if (!elGameWindow) return;
-    if (!activePlayer) return;
-
+  function movePlayer(
+    player: Alive,
+    timeSincePrevFrame: number,
+    elGameWindow: HTMLDivElement,
+    dirX: number,
+    dirY: number,
+    joystickAngle: number,
+    joystickTiltRatio: number,
+  ): void {
     // if no direction inputs
     if (!dirX && !dirY && !joystickTiltRatio) return;
 
-    const distanceMax = (activePlayer.speed / 2) * timeSincePrevFrame;
-
-    let distance = 0;
-    let angle = 0;
-
-    // keyboard
-    if (dirX || dirY) {
-      distance = distanceMax;
-      angle = Math.atan2(dirY, dirX);
-    }
+    let distance = player.speed * timeSincePrevFrame; // max distance
+    let angle = joystickAngle;
 
     // joystick overrides keyboard
     if (joystickTiltRatio) {
-      distance = distanceMax * joystickTiltRatio;
-      angle = (joystickAngle * Math.PI) / 180;
+      distance = distance * joystickTiltRatio;
+    } else if (dirX || dirY) {
+      angle = Math.atan2(dirY, dirX);
     }
-
-    const left = distance * Math.cos(angle);
-    const top = distance * Math.sin(angle);
-
-    const roundedLeft = roundTo3Places(left);
-    const roundedTop = roundTo3Places(top);
 
     // scroll world
     elGameWindow.scrollBy({
-      left: roundedLeft,
-      top: roundedTop,
+      left: distance * Math.cos(angle),
+      top: distance * Math.sin(angle),
     });
   }
 
@@ -256,15 +247,19 @@
     // timestamp: DOMHighResTimeStamp
     // The DOMHighResTimeStamp type is a double and is used to store a time value in milliseconds.
 
-    if (!elPickupsXp) {
-      console.error(`No div with id "pickups-xp".`);
-      return;
-    }
-
     // calc fps
     timeSincePrevFrame = timestamp - timestampPrev;
     timestampPrev = timestamp;
     fps = Math.round(1000 / timeSincePrevFrame);
+
+    if (!elGameWindow) {
+      console.error(`No div element with id "game-window".`);
+      return;
+    }
+    if (!elPickupsXp) {
+      console.error(`No div element with id "pickups-xp".`);
+      return;
+    }
 
     // check game over
     isFinished = isGameOver(activeRound, activePlayer);
@@ -273,7 +268,15 @@
     if (!isPaused) {
       activeRound.durationTimer.current += timeSincePrevFrame;
 
-      movePlayer();
+      movePlayer(
+        activePlayer,
+        timeSincePrevFrame,
+        elGameWindow,
+        dirX,
+        dirY,
+        joystickAngle,
+        joystickTiltRatio,
+      );
       activePlayer = checkWeapons(activePlayer, activeRound, timeSincePrevFrame);
 
       moveEnemies();
@@ -307,27 +310,27 @@
   function startGame(): void {
     // el doesn't exist yet
     if (!elGameWindow) {
-      console.error(`No element with id "game-window".`);
+      console.error(`No div element with id "game-window".`);
       return;
     }
     if (!elTerrain) {
-      console.error(`No element with id "terrain".`);
+      console.error(`No div element with id "terrain".`);
       return;
     }
     if (!elEnemies) {
-      console.error(`No div with id "enemies".`);
+      console.error(`No div element with id "enemies".`);
       return;
     }
     if (!elPickupsItems) {
-      console.error(`No div with id "pickups-items".`);
+      console.error(`No div element with id "pickups-items".`);
       return;
     }
     if (!elPickupsXp) {
-      console.error(`No div with id "pickups-xp".`);
+      console.error(`No div element with id "pickups-xp".`);
       return;
     }
     if (!elPlayer) {
-      console.error(`No element with id "player".`);
+      console.error(`No div element with id "player".`);
       return;
     }
 
@@ -399,29 +402,31 @@
 
     <div class="grid grid-cols-3 grid-rows-1">
       <div class="flex flex-col gap-1 justify-self-start text-center">
-        <div class="flex flex-row gap-1">
-          {#each { length: player.capacityWeapons }, i}
-            <span class="w-6 overflow-clip border-2 border-white/30">
-              {#if player.equippedWeapons[i]}
-                {player.equippedWeapons[i].sprite.emoji}
-              {:else}
-                {i + 1}
-              {/if}
-            </span>
-          {/each}
-        </div>
+        <!-- causing LSP errors -->
 
-        <div class="flex flex-row gap-1">
-          {#each { length: player.capacityAccessories }, i}
-            <span class="w-6 overflow-clip border-2 border-dotted border-white/30">
-              {#if player.equippedAccessories[i]}
-                {player.equippedAccessories[i].sprite.emoji}
-              {:else}
-                {i + 1}
-              {/if}
-            </span>
-          {/each}
-        </div>
+        <!-- <div class="flex flex-row gap-1"> -->
+        <!--   {#each { length: activePlayer.capacityWeapons }, i} -->
+        <!--     <span class="w-6 overflow-clip border-2 border-white/30"> -->
+        <!--       {#if activePlayer.equippedWeapons[i]} -->
+        <!--         {activePlayer.equippedWeapons[i].sprite.emoji} -->
+        <!--       {:else} -->
+        <!--         {i + 1} -->
+        <!--       {/if} -->
+        <!--     </span> -->
+        <!--   {/each} -->
+        <!-- </div> -->
+
+        <!-- <div class="flex flex-row gap-1"> -->
+        <!--   {#each { length: activePlayer.capacityAccessories }, i} -->
+        <!--     <span class="w-6 overflow-clip border-2 border-dotted border-white/30"> -->
+        <!--       {#if activePlayer.equippedAccessories[i]} -->
+        <!--         {activePlayer.equippedAccessories[i].sprite.emoji} -->
+        <!--       {:else} -->
+        <!--         {i + 1} -->
+        <!--       {/if} -->
+        <!--     </span> -->
+        <!--   {/each} -->
+        <!-- </div> -->
       </div>
 
       <time
