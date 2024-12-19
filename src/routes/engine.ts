@@ -20,6 +20,7 @@ export interface Sprite {
   width: number; // px
 }
 
+// used for game timer, weapon cooldown time, etc.
 export interface NumberRange {
   min: number;
   max: number;
@@ -64,18 +65,19 @@ export interface Weapon extends GameObject {
   damage: number;
   durationActive: NumberRange; // milliseconds
   durationCooldown: NumberRange; // milliseconds
-  // levelCurrent: number;
-  // levelMax: number;
+  level: number;
+  maxSpawns: number;
 }
 
 export interface Alive extends GameObject {
-  capacityAccessories: number; // default 6
-  capacityWeapons: number; // default 6
   durationHitCooldown: NumberRange; // invincibility after hit, milliseconds
   health: NumberRange; // need max for level up, accesory effects, etc.
   speed: number;
-  weapons: Weapon[];
-  activeWeapons: Weapon[];
+  capacityAccessories: number; // default 6
+  capacityWeapons: number; // default 6
+  equippedAccessories: GameObject[];
+  equippedWeapons: Weapon[];
+  activeWeapons: Weapon[]; // active el
 }
 
 /*
@@ -181,7 +183,7 @@ export function checkCollisionsOnEnemies(
       round.logs.enemiesKilled.push(newLog);
 
       // remove enemy weapons sprites
-      enemy.weapons.forEach((weapon) => weapon.el?.remove());
+      enemy.activeWeapons.forEach((weapon) => weapon.el?.remove());
       // remove enemy sprite
       enemy.el?.remove();
 
@@ -225,7 +227,7 @@ export function checkCollisionsOnPlayer(
     if (!enemy.el) return;
     if (!player.el) return;
 
-    enemy.weapons.forEach((weapon) => {
+    enemy.activeWeapons.forEach((weapon) => {
       if (!weapon.el) return;
       if (!player.el) return;
 
@@ -253,7 +255,7 @@ export function checkCollisionsOnPlayer(
 }
 
 /*
- * Add new weapons. Remove expired weapons.
+ * Remove expired weapons. Add new weapons.
  */
 export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame: number): Alive {
   // remove elements of expired weapons
@@ -270,7 +272,7 @@ export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame:
   );
 
   // add new weapons
-  alive.weapons.forEach((weapon) => {
+  alive.equippedWeapons.forEach((weapon) => {
     weapon.durationCooldown.current += timeSincePrevFrame;
 
     // if still on cooldown
@@ -289,21 +291,13 @@ export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame:
 
     // set el location
     if (!alive?.el) return;
-    const left = parseFloat(alive.el.style.left);
-    const width = parseFloat(alive.el.style.width);
-    const top = parseFloat(alive.el.style.top);
-    const height = parseFloat(alive.el.style.height);
+    // const width = parseFloat(alive.el.style.width);
+    // const height = parseFloat(alive.el.style.height);
+    // newWeapon.el.style.left = `${width}px`;
+    // newWeapon.el.style.top = `${height/2}px`;
 
-    newWeapon.el.style.left = `${left + width}px`;
-    newWeapon.el.style.top = `${top + height}px`;
-
-    // add el to world
-    const elWeapons = document.getElementById("weapons");
-    if (!elWeapons) {
-      console.error(`No div with id "weapons".`);
-      return;
-    }
-    elWeapons.appendChild(newWeapon.el);
+    // add el as child of alive.el
+    alive.el.appendChild(newWeapon.el);
   });
 
   return alive;
@@ -338,7 +332,7 @@ export function generateDivEl(sprite: Sprite, round: GameRound): HTMLDivElement 
   elDiv.style.height = `${sprite.height}px`;
 
   // clip emoji overflow
-  elDiv.style.overflow = "clip";
+  // elDiv.style.overflow = "clip";
 
   // set bg color alpha to 50%
   elDiv.style.backgroundColor = sprite.colorBg.replace(")", " / 0.5)");

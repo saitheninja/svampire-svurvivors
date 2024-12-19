@@ -1,4 +1,4 @@
-import type { GameRound, WorldMap, GameObject, Alive, Weapon } from "./engine";
+import type { GameRound, WorldMap, Sprite, GameObject, Alive, Weapon } from "./engine";
 
 // maps
 export const mapForest: WorldMap = {
@@ -16,35 +16,41 @@ export const mapForest: WorldMap = {
 };
 
 // player weapons
+const spriteWhip1: Sprite = {
+  name: "whip",
+  colorBg: "rgb(30 58 138)", // bg-blue-900
+  colorHit: "rgb(147 197 253)", // bg-blue-300
+  emoji: "🔗🔗🔗🔗",
+  fontSize: 24,
+  width: 24 * 5,
+  height: 24,
+};
 const weaponWhip: Weapon = {
   name: "whip",
   damage: 2,
   durationActive: { min: 0, max: 1000, current: 0 },
   durationCooldown: { min: 0, max: 2000, current: 0 },
-  sprite: {
-    name: "whip",
-    colorBg: "rgb(30 58 138)", // bg-blue-900
-    colorHit: "rgb(147 197 253)", // bg-blue-300
-    emoji: "🔗🔗🔗🔗",
-    fontSize: 24,
-    width: 24 * 5,
-    height: 24,
-  },
+  level: 1,
+  maxSpawns: 1,
+  sprite: spriteWhip1,
+};
+const spriteSword1: Sprite = {
+  name: "sword",
+  colorBg: "rgb(30 58 138)", // bg-blue-900
+  colorHit: "rgb(147 197 253)", // bg-blue-300
+  emoji: "🗡️",
+  fontSize: 48,
+  width: 48,
+  height: 48,
 };
 const weaponSword: Weapon = {
   name: "sword",
   damage: 4,
   durationActive: { min: 0, max: 2000, current: 0 },
   durationCooldown: { min: 0, max: 5000, current: 0 },
-  sprite: {
-    name: "sword",
-    colorBg: "rgb(30 58 138)", // bg-blue-900
-    colorHit: "rgb(147 197 253)", // bg-blue-300
-    emoji: "🗡️",
-    fontSize: 48,
-    width: 48,
-    height: 48,
-  },
+  level: 1,
+  maxSpawns: 1,
+  sprite: spriteSword1,
 };
 // weaponBoomerang: "🪃"
 // weaponAxe: "🪓"
@@ -54,8 +60,10 @@ export const weaponsPlayerAll = [weaponWhip, weaponSword];
 const weaponSkeletonBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
-  durationActive: { min: 0, max: 2000, current: 0 },
-  durationCooldown: { min: 0, max: 0, current: 0 },
+  durationActive: { min: 0, max: 5000, current: 0 },
+  durationCooldown: { min: 0, max: 1, current: 0 },
+  level: 1,
+  maxSpawns: 1,
   sprite: {
     name: "skeleton-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -69,8 +77,10 @@ const weaponSkeletonBody: Weapon = {
 const weaponZombieBody: Weapon = {
   name: "zombie-body",
   damage: 1,
-  durationActive: { min: 0, max: 2000, current: 0 },
-  durationCooldown: { min: 0, max: 0, current: 0 },
+  durationActive: { min: 0, max: 5000, current: 0 },
+  durationCooldown: { min: 0, max: 1, current: 0 },
+  level: 1,
+  maxSpawns: 1,
   sprite: {
     name: "zombie-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -84,10 +94,12 @@ const weaponZombieBody: Weapon = {
 const weaponGoblinBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
-  durationActive: { min: 0, max: 2000, current: 0 },
-  durationCooldown: { min: 0, max: 0, current: 0 },
+  durationActive: { min: 0, max: 5000, current: 0 },
+  durationCooldown: { min: 0, max: 1, current: 0 },
+  level: 1,
+  maxSpawns: 1,
   sprite: {
-    name: "whip",
+    name: "goblin-body",
     colorBg: "rgb(30 58 138)", // bg-blue-900
     colorHit: "rgb(147 197 253)", // bg-blue-300
     emoji: "",
@@ -101,11 +113,12 @@ export const player: Alive = {
   name: "player",
   capacityAccessories: 6,
   capacityWeapons: 6,
-  durationHitCooldown: { min: 0, max: 1000, current: 0 },
+  equippedAccessories: [],
+  equippedWeapons: [...weaponsPlayerAll],
+  activeWeapons: [],
+  durationHitCooldown: { min: 0, max: 200, current: 0 },
   health: { min: 0, max: 100, current: 100 },
   speed: 1,
-  weapons: [...weaponsPlayerAll],
-  activeWeapons: [],
   sprite: {
     name: "player",
     colorBg: "rgb(30 58 138)", // bg-blue-900
@@ -122,11 +135,12 @@ const enemySkeleton: Alive = {
   name: "skeleton",
   capacityAccessories: 6,
   capacityWeapons: 6,
+  equippedAccessories: [],
+  equippedWeapons: [weaponSkeletonBody],
+  activeWeapons: [],
   durationHitCooldown: { min: 0, max: 0, current: 0 },
   health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
-  weapons: [weaponSkeletonBody],
-  activeWeapons: [],
   sprite: {
     name: "skeleton",
     colorBg: "rgb(132 204 22)", // bg-lime-500
@@ -141,11 +155,12 @@ const enemyZombie: Alive = {
   name: "zombie",
   capacityAccessories: 6,
   capacityWeapons: 6,
+  equippedAccessories: [],
+  equippedWeapons: [weaponZombieBody],
+  activeWeapons: [],
   durationHitCooldown: { min: 0, max: 0, current: 0 },
   health: { min: 0, max: 1, current: 1 },
   speed: 0.1,
-  weapons: [weaponZombieBody],
-  activeWeapons: [],
   sprite: {
     name: "zombie",
     colorBg: "rgb(132 204 22)", // bg-lime-500
@@ -160,11 +175,12 @@ const enemyGoblin: Alive = {
   name: "goblin",
   capacityAccessories: 6,
   capacityWeapons: 6,
+  equippedAccessories: [],
+  equippedWeapons: [weaponGoblinBody],
+  activeWeapons: [],
   durationHitCooldown: { min: 0, max: 0, current: 0 },
   health: { min: 0, max: 100, current: 100 },
   speed: 0.05,
-  weapons: [weaponGoblinBody],
-  activeWeapons: [],
   sprite: {
     name: "goblin",
     colorBg: "rgb(239 68 68)", // bg-red-500

@@ -38,7 +38,6 @@
   let elPickupsItems: HTMLDivElement | undefined = $state();
   let elPickupsXp: HTMLDivElement | undefined = $state();
   let elPlayer: HTMLDivElement | undefined = $state();
-  let elWeapons: HTMLDivElement | undefined = $state();
 
   let isStarted = $state(false);
   let isFinished = $state(false);
@@ -291,10 +290,10 @@
       checkXpPickups();
       checkLevelUp();
 
-      // let activeEnemiesNew: Alive[] = [];
-      // activeEnemies.forEach((enemy) => {
-      //   activeEnemiesNew.push(checkWeapons(enemy, activeRound, timeSincePrevFrame));
-      // });
+      let activeEnemiesNew: Alive[] = [];
+      activeEnemies.forEach((enemy) => {
+        activeEnemiesNew.push(checkWeapons(enemy, activeRound, timeSincePrevFrame));
+      });
     }
 
     // new frame
@@ -331,10 +330,6 @@
       console.error(`No element with id "player".`);
       return;
     }
-    if (!elWeapons) {
-      console.error(`No div with id "weapons".`);
-      return;
-    }
 
     // reset game state
     activeRound = structuredClone(gameRound1);
@@ -344,7 +339,6 @@
     elEnemies.replaceChildren(); // empty a node of all its children
     elPickupsItems.replaceChildren();
     elPickupsXp.replaceChildren();
-    elWeapons.replaceChildren();
     isFinished = false;
     isPaused = false;
     isStarted = true; // hide info el, use joystick
@@ -406,20 +400,26 @@
     <div class="grid grid-cols-3 grid-rows-1">
       <div class="flex flex-col gap-1 justify-self-start text-center">
         <div class="flex flex-row gap-1">
-          {#each player.weapons as { sprite }}
-            <span class="w-6 overflow-clip border-2 border-white/30">{sprite.emoji}</span>
+          {#each { length: player.capacityWeapons }, i}
+            <span class="w-6 overflow-clip border-2 border-white/30">
+              {#if player.equippedWeapons[i]}
+                {player.equippedWeapons[i].sprite.emoji}
+              {:else}
+                {i + 1}
+              {/if}
+            </span>
           {/each}
         </div>
 
         <div class="flex flex-row gap-1">
-          {#each Array(player.capacityWeapons) as slot, i}
-            <span class="w-6 border-2 border-white/30">{slot}{i + 1}</span>
-          {/each}
-        </div>
-
-        <div class="flex flex-row gap-1">
-          {#each Array(player.capacityAccessories) as slot, i}
-            <span class="w-6 border-2 border-dotted border-white/30">{slot}{i + 1}</span>
+          {#each { length: player.capacityAccessories }, i}
+            <span class="w-6 overflow-clip border-2 border-dotted border-white/30">
+              {#if player.equippedAccessories[i]}
+                {player.equippedAccessories[i].sprite.emoji}
+              {:else}
+                {i + 1}
+              {/if}
+            </span>
           {/each}
         </div>
       </div>
@@ -436,7 +436,7 @@
 
       <div class="flex flex-col gap-1 justify-self-end text-end">
         <!-- <span>{0} 🪙</span> -->
-        <span>{activeRound.logs.enemiesKilled?.length ?? 0} 💀</span>
+        <span>{activeRound.logs.enemiesKilled.length} 💀</span>
 
         <form
           onsubmit={(event) => {
@@ -550,8 +550,6 @@
         <div class="bg-rose-500" style="width: {healthPercent}%"></div>
       </div>
     </div>
-
-    <div bind:this={elWeapons} id="weapons" class="z-10"></div>
   </div>
 </div>
 
