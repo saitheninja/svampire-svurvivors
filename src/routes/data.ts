@@ -61,7 +61,7 @@ const weaponSkeletonBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
   durationActive: { min: 0, max: 5000, current: 0 },
-  durationCooldown: { min: 0, max: 1, current: 0 },
+  durationCooldown: { min: 0, max: 10, current: 0 },
   level: 1,
   maxSpawns: 1,
   sprite: {
@@ -78,7 +78,7 @@ const weaponZombieBody: Weapon = {
   name: "zombie-body",
   damage: 1,
   durationActive: { min: 0, max: 5000, current: 0 },
-  durationCooldown: { min: 0, max: 1, current: 0 },
+  durationCooldown: { min: 0, max: 10, current: 0 },
   level: 1,
   maxSpawns: 1,
   sprite: {
@@ -95,7 +95,7 @@ const weaponGoblinBody: Weapon = {
   name: "skeleton-body",
   damage: 1,
   durationActive: { min: 0, max: 5000, current: 0 },
-  durationCooldown: { min: 0, max: 1, current: 0 },
+  durationCooldown: { min: 0, max: 10, current: 0 },
   level: 1,
   maxSpawns: 1,
   sprite: {

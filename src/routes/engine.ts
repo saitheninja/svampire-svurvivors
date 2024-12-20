@@ -278,6 +278,10 @@ export function checkWeapons(alive: Alive, round: GameRound, timeSincePrevFrame:
     // if still on cooldown
     if (weapon.durationCooldown.current < weapon.durationCooldown.max) return;
 
+    // check maxSpawns
+    const active = alive.activeWeapons.filter((activeWeapon) => activeWeapon.name === weapon.name);
+    if (active.length >= weapon.maxSpawns) return;
+
     // reset cooldown
     weapon.durationCooldown.current = 0;
 
